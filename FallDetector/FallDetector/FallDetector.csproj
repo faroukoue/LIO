@@ -92,6 +92,10 @@
     <AndroidResource Include="Resources\drawable\Custom_Background.xml" />
     <AndroidResource Include="Resources\drawable\FallingIcon.png" />
     <AndroidResource Include="Resources\drawable\Warning.png" />
+    <AndroidResource Include="Resources\drawable\Plus.png" />
+    <AndroidResource Include="Resources\drawable\Minus.png" />
+    <AndroidResource Include="Resources\drawable\Button_Selector.xml" />
+    <AndroidResource Include="Resources\drawable\BlueMinus.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\Color\" />

@@ -10,7 +10,11 @@ namespace FallDetector.Sources
     [Activity(Label = "FallDetector", MainLauncher = true, Icon = "@drawable/FallingIcon")]
     public class MainActivity : Activity
     {
-        private Button button;
+        private Button next;
+
+        private ImageButton plusThMax;
+        private ImageButton minusthMax;
+
         private FallBroadcastReceiver receiver;
 
         protected override void OnCreate(Bundle bundle)
@@ -22,15 +26,26 @@ namespace FallDetector.Sources
 
             // Get our button from the layout resource,
             // and attach an event to it
-            button = FindViewById<Button>(Resource.Id.button);
+            next = FindViewById<Button>(Resource.Id.button);
+
+            plusThMax = FindViewById<ImageButton>(Resource.Id.plusTHMaxButton);
+            minusthMax = FindViewById<ImageButton>(Resource.Id.minusTHMaxButton);
 
             var fallDetectorIntent = new Intent(this, typeof(FallDetectorService));
             fallDetectorIntent.PutExtra("FallServiceStarted", "FallService");
             StartService(fallDetectorIntent);
 
-            button.Click += delegate
+            next.Click += delegate
             {
-                this.onClick(button);
+                this.onClick(next);
+            };
+            plusThMax.Click += delegate
+            {
+                this.onClick(plusThMax);
+            };
+            minusthMax.Click += delegate
+            {
+                this.onClick(minusthMax);
             };
         }
 
@@ -49,19 +64,14 @@ namespace FallDetector.Sources
 
         private void onClick(View v)
         {
-            if (v == button)
+            if (v == next)
             {
-
                 //Toast.MakeText (this, "Button clicked", ToastLength.Short).Show ();
                 var plotActivityIntent = new Intent(this, typeof(PlotActivity));
                 StartActivity(plotActivityIntent);
 
-
             }
-
         }
-
-
 
     }
 }

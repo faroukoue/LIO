@@ -37,7 +37,7 @@ namespace FallDetector.Sources
         public FallDetectorServiceBinder binder;
 
         private const int notificationId = 0;
-        private const float maxTh = 1.8f; //Upper threshold
+        private const float maxTh = 2.5f; //Upper threshold
         private const float minTh = 0.7f; //lower threshold
         private const long timeFallingWindow = 3; //time of the fall (in seconds)
 

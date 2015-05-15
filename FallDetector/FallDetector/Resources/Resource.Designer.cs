@@ -45,19 +45,31 @@ namespace FallDetector
 		{
 			
 			// aapt resource value: 0x7f020000
-			public const int Custom_Background = 2130837504;
+			public const int BlueMinus = 2130837504;
 			
 			// aapt resource value: 0x7f020001
-			public const int FallingIcon = 2130837505;
+			public const int Button_Selector = 2130837505;
 			
 			// aapt resource value: 0x7f020002
-			public const int Icon = 2130837506;
+			public const int Custom_Background = 2130837506;
 			
 			// aapt resource value: 0x7f020003
-			public const int monoandroidsplash = 2130837507;
+			public const int FallingIcon = 2130837507;
 			
 			// aapt resource value: 0x7f020004
-			public const int Warning = 2130837508;
+			public const int Icon = 2130837508;
+			
+			// aapt resource value: 0x7f020005
+			public const int Minus = 2130837509;
+			
+			// aapt resource value: 0x7f020006
+			public const int monoandroidsplash = 2130837510;
+			
+			// aapt resource value: 0x7f020007
+			public const int Plus = 2130837511;
+			
+			// aapt resource value: 0x7f020008
+			public const int Warning = 2130837512;
 			
 			static Drawable()
 			{
@@ -72,6 +84,9 @@ namespace FallDetector
 		public partial class Id
 		{
 			
+			// aapt resource value: 0x7f060004
+			public const int THMaxTextView = 2131099652;
+			
 			// aapt resource value: 0x7f060003
 			public const int button = 2131099651;
 			
@@ -82,10 +97,16 @@ namespace FallDetector
 			public const int fallTextView = 2131099649;
 			
 			// aapt resource value: 0x7f060005
-			public const int plotmodel = 2131099653;
+			public const int minusTHMaxButton = 2131099653;
 			
-			// aapt resource value: 0x7f060004
-			public const int plotview = 2131099652;
+			// aapt resource value: 0x7f060008
+			public const int plotmodel = 2131099656;
+			
+			// aapt resource value: 0x7f060007
+			public const int plotview = 2131099655;
+			
+			// aapt resource value: 0x7f060006
+			public const int plusTHMaxButton = 2131099654;
 			
 			// aapt resource value: 0x7f060000
 			public const int relativeLayout1 = 2131099648;
