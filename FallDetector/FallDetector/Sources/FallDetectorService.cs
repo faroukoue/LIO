@@ -42,7 +42,7 @@ namespace FallDetector.Sources
         private const int notificationId = 0;
         private float maxTh = 2.5f; //Upper threshold
         private float minTh = 0.7f; //lower threshold
-        private const long timeFallingWindow = 3; //time of the fall (in seconds)
+        private const long timeFallingWindow = 2; //time of the fall (in seconds)
 
 
         public FallDetectorService()
@@ -78,7 +78,7 @@ namespace FallDetector.Sources
             String temp = intent.GetStringExtra("FallServiceStarted");
             Console.WriteLine(temp);
 
-            receiver = new FallBroadcastReceiver(this);
+            receiver = new FallBroadcastReceiver();
             var intentFilter = new IntentFilter();
             intentFilter.AddAction("FallBroadcastReceiver");
 
