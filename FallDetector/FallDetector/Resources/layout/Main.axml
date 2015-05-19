@@ -21,7 +21,7 @@
         p1:textAppearance="?android:attr/textAppearanceSmall"
         p1:layout_width="166.3dp"
         p1:layout_height="51.6dp"
-        p1:textSize=" 50dp"
+        p1:textSize=" 40dp"
         p1:textColor="#1F1F21"
         p1:layout_above="@id/button"
         p1:id="@+id/THMaxTextView"
@@ -36,9 +36,8 @@
         p1:layout_width="57.5dp"
         p1:layout_height="57.4dp"
         p1:id="@+id/minusTHMaxButton"
-        p1:layout_toLeftOf="@id/THMaxTextView"
-        p1:layout_marginTop="87.7dp"
-        p1:layout_marginRight="40dp" />
+        p1:layout_marginTop="90.0dp"
+        p1:layout_marginLeft="10.0dp" />
     <ImageButton
         p1:src="@drawable/Plus"
         p1:background="@null"
@@ -47,8 +46,39 @@
         p1:scaleType="fitEnd"
         p1:layout_width="57.5dp"
         p1:layout_height="57.4dp"
-        p1:layout_toRightOf="@id/THMaxTextView"
         p1:id="@+id/plusTHMaxButton"
-        p1:layout_marginTop="87.7dp"
-        p1:layout_marginLeft="40dp" />
+        p1:layout_marginTop="90.0dp"
+        p1:layout_marginLeft="300.0dp" />
+    <ImageButton
+        p1:src="@drawable/Minus"
+        p1:background="@null"
+        p1:tint="#007AFF"
+        p1:clickable="true"
+        p1:scaleType="fitEnd"
+        p1:layout_width="57.5dp"
+        p1:layout_height="57.4dp"
+        p1:layout_below="@id/button"
+        p1:id="@+id/minusTHMinButton"
+        p1:layout_marginLeft="10.0dp" />
+    <TextView
+        p1:text="THMin"
+        p1:textAppearance="?android:attr/textAppearanceSmall"
+        p1:layout_width="166.3dp"
+        p1:layout_height="51.6dp"
+        p1:textSize=" 40dp"
+        p1:textColor="#1F1F21"
+        p1:layout_below="@id/button"
+        p1:layout_centerHorizontal="true"
+        p1:id="@+id/THMinTextView" />
+    <ImageButton
+        p1:src="@drawable/Plus"
+        p1:background="@null"
+        p1:tint="#007AFF"
+        p1:clickable="true"
+        p1:scaleType="fitEnd"
+        p1:layout_width="57.5dp"
+        p1:layout_height="57.4dp"
+        p1:layout_below="@id/button"
+        p1:id="@+id/plusTHMinButton"
+        p1:layout_marginLeft="300.0dp" />
 </RelativeLayout>

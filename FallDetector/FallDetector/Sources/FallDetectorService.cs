@@ -4,7 +4,7 @@ using Android.OS;
 using Android.Content;
 using Android.Hardware;
 using Android.Util;
-using Android;
+using Android.Preferences;
 
 
 namespace FallDetector.Sources
@@ -13,6 +13,9 @@ namespace FallDetector.Sources
     [IntentFilter(new String[] { "FallDetectorService" })]
     public class FallDetectorService : Service, ISensorEventListener
     {
+        private ISharedPreferences pref;
+        private FallBroadcastReceiver receiver;
+
         private static readonly object _syncLock = new object();
         private SensorManager mSensorManager;
         private Sensor mAccelerometer;
@@ -37,10 +40,9 @@ namespace FallDetector.Sources
         public FallDetectorServiceBinder binder;
 
         private const int notificationId = 0;
-        private const float maxTh = 2.5f; //Upper threshold
-        private const float minTh = 0.7f; //lower threshold
+        private float maxTh = 2.5f; //Upper threshold
+        private float minTh = 0.7f; //lower threshold
         private const long timeFallingWindow = 3; //time of the fall (in seconds)
-
 
 
         public FallDetectorService()
@@ -62,6 +64,11 @@ namespace FallDetector.Sources
         [Obsolete]
         public override StartCommandResult OnStartCommand(Android.Content.Intent intent, StartCommandFlags flags, int startId)
         {
+
+            pref = PreferenceManager.GetDefaultSharedPreferences(this);
+            maxTh = pref.GetFloat("maxTh",0.0f);
+            minTh = pref.GetFloat("minTh",0.0f);
+
             mSensorManager = (SensorManager)GetSystemService(SensorService);
             mAccelerometer = mSensorManager.GetDefaultSensor(SensorType.Accelerometer);
             mSensorManager.RegisterListener(this, mAccelerometer, SensorDelay.Normal);
@@ -70,6 +77,12 @@ namespace FallDetector.Sources
 
             String temp = intent.GetStringExtra("FallServiceStarted");
             Console.WriteLine(temp);
+
+            receiver = new FallBroadcastReceiver(this);
+            var intentFilter = new IntentFilter();
+            intentFilter.AddAction("FallBroadcastReceiver");
+
+            RegisterReceiver(receiver, intentFilter);
 
             /*var intentFall = new Intent(this, typeof(FallBroadcastReceiver));
             intentFall.PutExtra("FallDetected", "Fall");
@@ -105,11 +118,11 @@ namespace FallDetector.Sources
         {
             lock (_syncLock)
             {
-                float ax = e.Values[0] / SensorManager.GravityEarth;
-                float ay = e.Values[1] / SensorManager.GravityEarth;
-                float az = e.Values[2] / SensorManager.GravityEarth;
+                float ax = e.Values[0];
+                float ay = e.Values[1];
+                float az = e.Values[2];
 
-                double accT = Math.Sqrt(ax * ax + ay * ay + az * az);
+                double accT = Math.Sqrt(ax * ax + ay * ay + az * az) / SensorManager.GravityEarth;
 
                 if (this.binder != null && this.binder.activity != null)
                     ((PlotActivity)this.binder.activity).updatePlot(e.Timestamp / 1e9, accT);
@@ -121,7 +134,7 @@ namespace FallDetector.Sources
                     Console.WriteLine("Timer Start");
                 }
 
-                if (accT > maxTh && !this.ImpactDetected)
+                if (accT > maxTh && !this.ImpactDetected && this.FreeFallDetected)
                 {
                     this.ImpactDetected = true;
                 }
@@ -147,6 +160,14 @@ namespace FallDetector.Sources
 
             //temporary
             //this.sendNotification();
+        }
+
+        public void updateThreshold()
+        {
+            maxTh = pref.GetFloat("maxTh", 0.0f);
+            minTh = pref.GetFloat("minTh", 0.0f);
+
+            Console.WriteLine("updateThreshold" + maxTh.ToString() + minTh.ToString());
         }
 
         public void sendNotification()
@@ -175,6 +196,8 @@ namespace FallDetector.Sources
 
             notificationManager.Notify(notificationId, notification);
         }
+
+
 
     }
 

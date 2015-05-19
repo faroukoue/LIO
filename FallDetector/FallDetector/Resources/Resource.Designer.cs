@@ -87,6 +87,9 @@ namespace FallDetector
 			// aapt resource value: 0x7f060004
 			public const int THMaxTextView = 2131099652;
 			
+			// aapt resource value: 0x7f060008
+			public const int THMinTextView = 2131099656;
+			
 			// aapt resource value: 0x7f060003
 			public const int button = 2131099651;
 			
@@ -99,14 +102,20 @@ namespace FallDetector
 			// aapt resource value: 0x7f060005
 			public const int minusTHMaxButton = 2131099653;
 			
-			// aapt resource value: 0x7f060008
-			public const int plotmodel = 2131099656;
-			
 			// aapt resource value: 0x7f060007
-			public const int plotview = 2131099655;
+			public const int minusTHMinButton = 2131099655;
+			
+			// aapt resource value: 0x7f06000b
+			public const int plotmodel = 2131099659;
+			
+			// aapt resource value: 0x7f06000a
+			public const int plotview = 2131099658;
 			
 			// aapt resource value: 0x7f060006
 			public const int plusTHMaxButton = 2131099654;
+			
+			// aapt resource value: 0x7f060009
+			public const int plusTHMinButton = 2131099657;
 			
 			// aapt resource value: 0x7f060000
 			public const int relativeLayout1 = 2131099648;

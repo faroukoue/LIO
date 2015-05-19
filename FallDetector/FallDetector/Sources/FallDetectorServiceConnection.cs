@@ -17,12 +17,6 @@ namespace FallDetector.Sources
             set { this.binder = value; }
         }
 
-        /*public FallDetectorServiceConnection(FallDetectorServiceBinder fallBinder)
-        {
-            if (fallBinder != null)
-                this.binder = fallBinder;
-        }*/
-
         public FallDetectorServiceConnection(PlotActivity pActivity)
         {
             if (pActivity != null)

@@ -4,18 +4,29 @@ using Android.Content;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
+using Android.Preferences;
 
 namespace FallDetector.Sources
 {
     [Activity(Label = "FallDetector", MainLauncher = true, Icon = "@drawable/FallingIcon")]
     public class MainActivity : Activity
     {
+        private ISharedPreferences pref;
+        private ISharedPreferencesEditor prefEditor;
+
+        private float maxTh = 2.5f; //Upper threshold
+        private float minTh = 0.7f; //lower threshold
+
         private Button next;
 
         private ImageButton plusThMax;
-        private ImageButton minusthMax;
+        private ImageButton minusThMax;
+        private ImageButton plusThMin;
+        private ImageButton minusThMin;
 
-        private FallBroadcastReceiver receiver;
+        private TextView thMaxTextView;
+        private TextView thMinTextView;
+
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -24,12 +35,26 @@ namespace FallDetector.Sources
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.Main);
 
-            // Get our button from the layout resource,
-            // and attach an event to it
+            pref = PreferenceManager.GetDefaultSharedPreferences(this);
+            prefEditor = pref.Edit();
+
+            prefEditor.PutFloat("maxTh", maxTh);
+            prefEditor.PutFloat("minTh", minTh);
+
+            prefEditor.Commit();
+
             next = FindViewById<Button>(Resource.Id.button);
 
             plusThMax = FindViewById<ImageButton>(Resource.Id.plusTHMaxButton);
-            minusthMax = FindViewById<ImageButton>(Resource.Id.minusTHMaxButton);
+            minusThMax = FindViewById<ImageButton>(Resource.Id.minusTHMaxButton);
+            plusThMin = FindViewById<ImageButton>(Resource.Id.plusTHMinButton);
+            minusThMin = FindViewById<ImageButton>(Resource.Id.minusTHMinButton);
+
+            thMaxTextView = FindViewById<TextView>(Resource.Id.THMaxTextView);
+            thMinTextView = FindViewById<TextView>(Resource.Id.THMinTextView);
+
+            this.thMaxTextView.Text = maxTh.ToString();
+            this.thMinTextView.Text = minTh.ToString();
 
             var fallDetectorIntent = new Intent(this, typeof(FallDetectorService));
             fallDetectorIntent.PutExtra("FallServiceStarted", "FallService");
@@ -43,27 +68,29 @@ namespace FallDetector.Sources
             {
                 this.onClick(plusThMax);
             };
-            minusthMax.Click += delegate
+            minusThMax.Click += delegate
             {
-                this.onClick(minusthMax);
+                this.onClick(minusThMax);
+            };
+            plusThMin.Click += delegate
+            {
+                this.onClick(plusThMin);
+            };
+            minusThMin.Click += delegate
+            {
+                this.onClick(minusThMin);
             };
         }
 
         protected override void OnResume()
         {
             base.OnResume(); // Always call the superclass first.
-
-            receiver = new FallBroadcastReceiver();
-            var intentFilter = new IntentFilter();
-            intentFilter.AddAction("FallBroadcastReceiver");
-            //intentFilter.addAction("FallDetectorService");
-
-            //RegisterReceiver(receiver, intentFilter);
-
         }
 
         private void onClick(View v)
         {
+            var intentFall = new Intent(this, typeof(FallBroadcastReceiver));
+
             if (v == next)
             {
                 //Toast.MakeText (this, "Button clicked", ToastLength.Short).Show ();
@@ -71,6 +98,38 @@ namespace FallDetector.Sources
                 StartActivity(plotActivityIntent);
 
             }
+            else if (v == plusThMax)
+            {
+                maxTh += 0.1f;
+                intentFall.PutExtra("Update_threshold", "MaxTh");
+            }
+            else if (v == minusThMax)
+            {
+                maxTh -= 0.1f;
+                intentFall.PutExtra("Update_threshold", "MaxTh");
+            }
+            else if (v == plusThMin)
+            {
+                minTh += 0.1f;
+                intentFall.PutExtra("Update_threshold", "MinTh");
+            }
+            else if (v == minusThMin)
+            {
+                minTh -= 0.1f;
+                intentFall.PutExtra("Update_threshold", "MinTh");
+            }
+            this.updateUI();
+            SendBroadcast(intentFall);
+        }
+
+        private void updateUI()
+        {
+
+            RunOnUiThread(() =>
+                {
+                    this.thMaxTextView.Text = maxTh.ToString();
+                    this.thMinTextView.Text = minTh.ToString();
+                });
         }
 
     }

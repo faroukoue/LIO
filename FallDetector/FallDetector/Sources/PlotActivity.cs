@@ -110,7 +110,7 @@ namespace FallDetector.Sources
 
             var plotModel = new PlotModel { Title = "Accelerometer" };
 
-            plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Time" });
+            plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Time"});
             plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Maximum = 5, Minimum = 0, Title = "Acc" });
 
             series1 = new LineSeries
