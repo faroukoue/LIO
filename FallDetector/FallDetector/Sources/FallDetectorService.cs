@@ -17,9 +17,18 @@ namespace FallDetector.Sources
         private FallBroadcastReceiver receiver;
 
         private static readonly object _syncLock = new object();
-        private SensorManager mSensorManager;
-        private Sensor mAccelerometer;
+        private SensorManager sensorManager;
+        private Sensor accelerometerSensor;
+        private Sensor rotationSensor;
+        private Sensor magnetometerSensor;
         private CustomCountDownTimer timer;
+
+        private float[] lastAccelerometer;
+        private float[] lastMagnetometer;
+        private Boolean lastAccelerometerSet = false;
+        private Boolean lastMagnetometerSet = false;
+        private float[] rotMatrix;
+        private float[] orientationValues;
 
         private Boolean freeFallDetected_ = false;
 
@@ -40,8 +49,8 @@ namespace FallDetector.Sources
         public FallDetectorServiceBinder binder;
 
         private const int notificationId = 0;
-        private float maxTh = 2.5f; //Upper threshold
-        private float minTh = 0.7f; //lower threshold
+        private const float maxTh = 2.5f; //Upper threshold
+        private const float minTh = 0.7f; //lower threshold
         private const long timeFallingWindow = 2; //time of the fall (in seconds)
 
 
@@ -61,32 +70,42 @@ namespace FallDetector.Sources
             return binder;
         }
 
-        [Obsolete]
-        public override StartCommandResult OnStartCommand(Android.Content.Intent intent, StartCommandFlags flags, int startId)
+        public void init()
         {
-
             pref = PreferenceManager.GetDefaultSharedPreferences(this);
-            maxTh = pref.GetFloat("maxTh",0.0f);
-            minTh = pref.GetFloat("minTh",0.0f);
 
-            mSensorManager = (SensorManager)GetSystemService(SensorService);
-            mAccelerometer = mSensorManager.GetDefaultSensor(SensorType.Accelerometer);
-            mSensorManager.RegisterListener(this, mAccelerometer, SensorDelay.Normal);
+            lastAccelerometer = new float[3];
+            lastMagnetometer = new float[3];
+            rotMatrix = new float[9];
+            orientationValues = new float[3];
+
+            sensorManager = (SensorManager)GetSystemService(SensorService);
+
+            accelerometerSensor = sensorManager.GetDefaultSensor(SensorType.Accelerometer);
+            sensorManager.RegisterListener(this, accelerometerSensor, SensorDelay.Normal);
+
+            rotationSensor = sensorManager.GetDefaultSensor(SensorType.RotationVector);
+            //sensorManager.RegisterListener(this, rotationSensor, SensorDelay.Normal);
+
+            magnetometerSensor = sensorManager.GetDefaultSensor(SensorType.MagneticField);
+            sensorManager.RegisterListener(this, magnetometerSensor, SensorDelay.Normal);
 
             timer = new CustomCountDownTimer(timeFallingWindow * 1000, 1000, this);
-
-            String temp = intent.GetStringExtra("FallServiceStarted");
-            Console.WriteLine(temp);
 
             receiver = new FallBroadcastReceiver();
             var intentFilter = new IntentFilter();
             intentFilter.AddAction("FallBroadcastReceiver");
 
             RegisterReceiver(receiver, intentFilter);
+        }
 
-            /*var intentFall = new Intent(this, typeof(FallBroadcastReceiver));
-            intentFall.PutExtra("FallDetected", "Fall");
-            SendBroadcast(intentFall);*/
+        [Obsolete]
+        public override StartCommandResult OnStartCommand(Android.Content.Intent intent, StartCommandFlags flags, int startId)
+        {
+            this.init();
+
+            String temp = intent.GetStringExtra("FallServiceStarted");
+            Console.WriteLine(temp);
 
             Log.Debug("FallDetectorService", "StartCommandResult");
 
@@ -96,7 +115,7 @@ namespace FallDetector.Sources
         public override void OnDestroy()
         {
             base.OnDestroy();
-            mSensorManager.UnregisterListener(this);
+            sensorManager.UnregisterListener(this);
             Console.WriteLine("OnDestroy");
             Log.Debug("FallDetectorService", "OnDestroy");
         }
@@ -116,33 +135,87 @@ namespace FallDetector.Sources
 
         public void OnSensorChanged(SensorEvent e)
         {
-            lock (_syncLock)
+            //Console.WriteLine(e.Sensor.StringType + " / " + Sensor.StringTypeAccelerometer);
+
+            switch (e.Sensor.StringType)
             {
-                float ax = e.Values[0];
-                float ay = e.Values[1];
-                float az = e.Values[2];
+                case Sensor.StringTypeAccelerometer:
+                    lock (_syncLock)
+                    {
+                        float ax = e.Values[0];
+                        float ay = e.Values[1];
+                        float az = e.Values[2];
 
-                double accT = Math.Sqrt(ax * ax + ay * ay + az * az) / SensorManager.GravityEarth;
+                        e.Values.CopyTo(lastAccelerometer, 0);
+                        lastAccelerometerSet = true;
 
-                if (this.binder != null && this.binder.activity != null)
-                    ((PlotActivity)this.binder.activity).updatePlot(e.Timestamp / 1e9, accT);
+                        double accT = Math.Sqrt(ax * ax + ay * ay + az * az) / SensorManager.GravityEarth;
 
-                if (accT < minTh && !this.FreeFallDetected)
+                        if (this.binder != null && this.binder.activity != null)
+                            ((PlotActivity)this.binder.activity).updatePlot(e.Timestamp / 1e9, accT);
+
+                        if (accT < minTh && !this.FreeFallDetected)
+                        {
+                            this.FreeFallDetected = true;
+                            this.timer.Start();
+                            Console.WriteLine("Timer Start");
+                        }
+
+                        if (accT > maxTh && !this.ImpactDetected && this.FreeFallDetected)
+                        {
+                            this.ImpactDetected = true;
+                        }
+
+                        //Console.WriteLine(temp);
+                        //Log.Debug("OnSensorChanged", temp);
+
+                    }
+                    break;
+
+                case Sensor.StringTypeMagneticField:
+                    lock (_syncLock)
+                    {
+                        e.Values.CopyTo(lastMagnetometer, 0);
+                        lastMagnetometerSet = true;
+                    }
+
+                    break;
+
+                case Sensor.StringTypeRotationVector:
+                    lock (_syncLock)
+                    {
+                        float[] temp = new float[3];
+                        e.Values.CopyTo(temp, 0);
+
+                        SensorManager.GetRotationMatrixFromVector(rotMatrix, temp);
+                        SensorManager.GetOrientation(rotMatrix, orientationValues);
+
+                        for (int i = 0; i < 3; ++i)
+                        {
+                            orientationValues[i] = (float)((Math.PI * orientationValues[i] / 180.0f));
+                        }
+
+                        Console.WriteLine("Azimuth = " + orientationValues[0].ToString() + " Pitch = " + orientationValues[1].ToString() + " Roll = " + orientationValues[2].ToString());
+
+                    }
+                    break;
+            }
+
+            if (lastMagnetometerSet && lastAccelerometerSet)
+            {
+                SensorManager.GetRotationMatrix(rotMatrix, null, lastAccelerometer, lastMagnetometer);
+                SensorManager.GetOrientation(rotMatrix, orientationValues);
+
+                for (int i = 0; i < 3; ++i)
                 {
-                    this.FreeFallDetected = true;
-                    this.timer.Start();
-                    Console.WriteLine("Timer Start");
+                    orientationValues[i] = (float)(orientationValues[i] * (180.0 / Math.PI));
                 }
 
-                if (accT > maxTh && !this.ImpactDetected && this.FreeFallDetected)
-                {
-                    this.ImpactDetected = true;
-                }
+                Console.WriteLine("Azimuth = " + orientationValues[0].ToString() + " Pitch = " + orientationValues[1].ToString() + " Roll = " + orientationValues[2].ToString());
 
-                //Console.WriteLine(temp);
-                //Log.Debug("OnSensorChanged", temp);
 
             }
+
         }
 
         public void triggersFallDetected()
@@ -164,9 +237,6 @@ namespace FallDetector.Sources
 
         public void updateThreshold()
         {
-            maxTh = pref.GetFloat("maxTh", 0.0f);
-            minTh = pref.GetFloat("minTh", 0.0f);
-
             Console.WriteLine("updateThreshold" + maxTh.ToString() + minTh.ToString());
         }
 
