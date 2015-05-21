@@ -1,4 +1,6 @@
-﻿
+﻿using System;
+
+using Android;
 using Android.App;
 using Android.Content;
 using Android.Views;
@@ -24,6 +26,8 @@ namespace FallDetector.Sources
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
+
+            Console.WriteLine("MainActivity OnCreate");
 
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.Main);
