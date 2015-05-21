@@ -151,8 +151,8 @@ namespace FallDetector.Sources
 
                         double accT = Math.Sqrt(ax * ax + ay * ay + az * az) / SensorManager.GravityEarth;
 
-                        if (this.binder != null && this.binder.activity != null)
-                            ((PlotActivity)this.binder.activity).updatePlot(e.Timestamp / 1e9, accT);
+                        if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotAccelerometer)
+                            ((PlotActivity)this.binder.activity).updateAccPlot(e.Timestamp / 1e9, accT);
 
                         if (accT < minTh && !this.FreeFallDetected)
                         {
@@ -166,9 +166,6 @@ namespace FallDetector.Sources
                             this.ImpactDetected = true;
                         }
 
-                        //Console.WriteLine(temp);
-                        //Log.Debug("OnSensorChanged", temp);
-
                     }
                     break;
 
@@ -179,25 +176,6 @@ namespace FallDetector.Sources
                         lastMagnetometerSet = true;
                     }
 
-                    break;
-
-                case Sensor.StringTypeRotationVector:
-                    lock (_syncLock)
-                    {
-                        float[] temp = new float[3];
-                        e.Values.CopyTo(temp, 0);
-
-                        SensorManager.GetRotationMatrixFromVector(rotMatrix, temp);
-                        SensorManager.GetOrientation(rotMatrix, orientationValues);
-
-                        for (int i = 0; i < 3; ++i)
-                        {
-                            orientationValues[i] = (float)((Math.PI * orientationValues[i] / 180.0f));
-                        }
-
-                        Console.WriteLine("Azimuth = " + orientationValues[0].ToString() + " Pitch = " + orientationValues[1].ToString() + " Roll = " + orientationValues[2].ToString());
-
-                    }
                     break;
             }
 
@@ -211,7 +189,14 @@ namespace FallDetector.Sources
                     orientationValues[i] = (float)(orientationValues[i] * (180.0 / Math.PI));
                 }
 
-                Console.WriteLine("Azimuth = " + orientationValues[0].ToString() + " Pitch = " + orientationValues[1].ToString() + " Roll = " + orientationValues[2].ToString());
+                double azimuth = orientationValues[0];
+                double pitch = orientationValues[1];
+                double roll = orientationValues[2];
+
+                if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotOrientation)
+                    ((PlotActivity)this.binder.activity).updateOrientPlot(e.Timestamp / 1e9, azimuth,pitch,roll);
+
+                //Console.WriteLine("Azimuth = " + orientationValues[0].ToString() + " Pitch = " + orientationValues[1].ToString() + " Roll = " + orientationValues[2].ToString());
 
 
             }
@@ -230,9 +215,6 @@ namespace FallDetector.Sources
         {
             this.FreeFallDetected = false;
             this.ImpactDetected = false;
-
-            //temporary
-            //this.sendNotification();
         }
 
         public void updateThreshold()

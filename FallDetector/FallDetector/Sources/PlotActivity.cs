@@ -18,10 +18,29 @@ namespace FallDetector.Sources
     {
 
         private Button stopPlotButton;
-        private LineSeries series1;
+        private LineSeries accelerometerSeries;
+        private LineSeries azimuthOrientationSeries;
+        private LineSeries pitchOrientationSeries;
+        private LineSeries rollOrientationSeries;
         private PlotView plotView;
         private double startTimestamp = -1;
         public Boolean isBound = false;
+
+        private Boolean plotAccelerometer = false;
+
+        public Boolean PlotAccelerometer
+        {
+            get { return plotAccelerometer; }
+            set { plotAccelerometer = value; }
+        }
+        private Boolean plotOrientation = false;
+
+        public Boolean PlotOrientation
+        {
+            get { return plotOrientation; }
+            set { plotOrientation = value; }
+        }
+
 
         public FallDetectorServiceBinder fallServiceBinder;
         private FallDetectorServiceConnection fallServiceConnection;
@@ -30,6 +49,11 @@ namespace FallDetector.Sources
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
+
+            var intent = this.Intent;
+            this.plotAccelerometer = intent.GetBooleanExtra("PlotAccelerometer", false);
+            this.plotOrientation = intent.GetBooleanExtra("PlotOrientation", false);
+
 
             // Set our view from the "main" layout resource
             //SetContentView(Resource.Layout.Plot_Layout);
@@ -70,7 +94,11 @@ namespace FallDetector.Sources
                 }
                 else
                 {
-                    series1.Points.Clear();
+                    accelerometerSeries.Points.Clear();
+                    azimuthOrientationSeries.Points.Clear();
+                    pitchOrientationSeries.Points.Clear();
+                    rollOrientationSeries.Points.Clear();
+
                     plotView.Model.ResetAllAxes();
                     plotView.InvalidatePlot(false);
                     startTimestamp = -1;
@@ -85,7 +113,6 @@ namespace FallDetector.Sources
         protected override void OnResume()
         {
             base.OnResume();
-            //mSensorManager.RegisterListener(this, mAccelerometer, SensorDelay.Normal);
             this.fallServiceConnection = new FallDetectorServiceConnection(this);
 
             plotView.Model = null;
@@ -96,8 +123,12 @@ namespace FallDetector.Sources
         protected override void OnPause()
         {
             base.OnPause();
-            if(isBound)
+            if (isBound)
+            {
+                isBound = false;
                 UnbindService(this.fallServiceConnection);
+            }
+                
         }
 
         protected override void OnDestroy()
@@ -110,10 +141,10 @@ namespace FallDetector.Sources
 
             var plotModel = new PlotModel { Title = "Accelerometer" };
 
-            plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Time"});
-            plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Maximum = 5, Minimum = 0, Title = "Acc" });
+            plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Time" });
+            plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, /*Maximum = 5, Minimum = 0,*/ Title = "Acc" });
 
-            series1 = new LineSeries
+            accelerometerSeries = new LineSeries
             {
                 MarkerType = MarkerType.Square,
                 MarkerSize = 4,
@@ -124,12 +155,48 @@ namespace FallDetector.Sources
                 Smooth = true,
             };
 
-            plotModel.Series.Add(series1);
+            azimuthOrientationSeries = new LineSeries
+            {
+                MarkerType = MarkerType.Square,
+                MarkerSize = 4,
+                MarkerStrokeThickness = 4,
+                MarkerStroke = OxyColors.White,
+                MarkerFill = OxyColors.Black,
+                Color = OxyColors.Green,
+                Smooth = true,
+            };
+
+            pitchOrientationSeries = new LineSeries
+            {
+                MarkerType = MarkerType.Square,
+                MarkerSize = 4,
+                MarkerStrokeThickness = 4,
+                MarkerStroke = OxyColors.White,
+                MarkerFill = OxyColors.Black,
+                Color = OxyColors.Blue,
+                Smooth = true,
+            };
+
+            rollOrientationSeries = new LineSeries
+            {
+                MarkerType = MarkerType.Square,
+                MarkerSize = 4,
+                MarkerStrokeThickness = 4,
+                MarkerStroke = OxyColors.White,
+                MarkerFill = OxyColors.Black,
+                Color = OxyColors.Red,
+                Smooth = true,
+            };
+
+            plotModel.Series.Add(accelerometerSeries);
+            plotModel.Series.Add(azimuthOrientationSeries);
+            plotModel.Series.Add(pitchOrientationSeries);
+            plotModel.Series.Add(rollOrientationSeries);
 
             return plotModel;
         }
 
-       public void updatePlot(double xValue, double yValue)
+        public void updateAccPlot(double xValue, double yValue)
         {
             if (startTimestamp == -1)
                 startTimestamp = xValue;
@@ -137,7 +204,23 @@ namespace FallDetector.Sources
             RunOnUiThread(() =>
             {
                 double tempTimeStamp = xValue - startTimestamp;
-                series1.Points.Add(new DataPoint(tempTimeStamp, yValue));
+                accelerometerSeries.Points.Add(new DataPoint(tempTimeStamp, yValue));
+                plotView.Model.InvalidatePlot(true);
+            });
+        }
+
+        public void updateOrientPlot(double timeStamp, double azimuth, double pitch, double roll)
+        {
+            if (startTimestamp == -1)
+                startTimestamp = timeStamp;
+
+            RunOnUiThread(() =>
+            {
+                double tempTimeStamp = timeStamp - startTimestamp;
+                azimuthOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, azimuth));
+                pitchOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, pitch));
+                rollOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, roll));
+
                 plotView.Model.InvalidatePlot(true);
             });
         }

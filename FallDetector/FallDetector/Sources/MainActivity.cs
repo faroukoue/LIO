@@ -17,7 +17,8 @@ namespace FallDetector.Sources
         private float maxTh = 2.5f; //Upper threshold
         private float minTh = 0.7f; //lower threshold
 
-        private Button next;
+        private Button accButton;
+        private Button orientButton;
 
 
         protected override void OnCreate(Bundle bundle)
@@ -35,15 +36,20 @@ namespace FallDetector.Sources
 
             prefEditor.Commit();
 
-            next = FindViewById<Button>(Resource.Id.button);
+            accButton = FindViewById<Button>(Resource.Id.accelerometerButton);
+            orientButton = FindViewById<Button>(Resource.Id.orientationButton);
 
             var fallDetectorIntent = new Intent(this, typeof(FallDetectorService));
             fallDetectorIntent.PutExtra("FallServiceStarted", "FallService");
             StartService(fallDetectorIntent);
 
-            next.Click += delegate
+            accButton.Click += delegate
             {
-                this.onClick(next);
+                this.onClick(accButton);
+            };
+            orientButton.Click += delegate
+            {
+                this.onClick(orientButton);
             };
 
         }
@@ -55,12 +61,17 @@ namespace FallDetector.Sources
 
         private void onClick(View v)
         {
-            if (v == next)
+            if (v == accButton)
             {
-                //Toast.MakeText (this, "Button clicked", ToastLength.Short).Show ();
-                var plotActivityIntent = new Intent(this, typeof(PlotActivity));
+                Intent plotActivityIntent = new Intent(this, typeof(PlotActivity));
+                plotActivityIntent.PutExtra("PlotAccelerometer", true);
                 StartActivity(plotActivityIntent);
-
+            }
+            else if (v == orientButton)
+            {
+                Intent plotActivityIntent = new Intent(this, typeof(PlotActivity));
+                plotActivityIntent.PutExtra("PlotOrientation", true);
+                StartActivity(plotActivityIntent);
             }
            
         }

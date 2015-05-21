@@ -96,10 +96,13 @@
     <AndroidResource Include="Resources\drawable\Minus.png" />
     <AndroidResource Include="Resources\drawable\Button_Selector.xml" />
     <AndroidResource Include="Resources\drawable\BlueMinus.png" />
+    <AndroidResource Include="Resources\drawable\CustomButton.xml" />
+    <AndroidResource Include="Resources\values\Styles.xml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
+    <AndroidResource Include="Resources\color\CustomTextButtonColor.xml" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\Color\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
      Other similar extension points exist, see Microsoft.Common.targets.
