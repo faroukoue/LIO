@@ -50,6 +50,8 @@ namespace FallDetector.Sources
         {
             base.OnCreate(bundle);
 
+            this.fallServiceConnection = new FallDetectorServiceConnection(this);
+
             var intent = this.Intent;
             this.plotAccelerometer = intent.GetBooleanExtra("PlotAccelerometer", false);
             this.plotOrientation = intent.GetBooleanExtra("PlotOrientation", false);
@@ -59,6 +61,8 @@ namespace FallDetector.Sources
             //SetContentView(Resource.Layout.Plot_Layout);
 
             plotView = new PlotView(this);
+            plotView.Clickable = true;
+
 
             stopPlotButton = new Button(this);
             stopPlotButton.Text = "Start";
@@ -87,7 +91,7 @@ namespace FallDetector.Sources
                     isBound = false;
                     this.fallServiceBinder.activity = null;
                     this.fallServiceBinder = null;
-                    plotView.InvalidatePlot(true);
+                    //plotView.InvalidatePlot(true);
                     UnbindService(this.fallServiceConnection);
 
                     stopPlotButton.Text = "Start";
@@ -113,7 +117,7 @@ namespace FallDetector.Sources
         protected override void OnResume()
         {
             base.OnResume();
-            this.fallServiceConnection = new FallDetectorServiceConnection(this);
+            
 
             plotView.Model = null;
             plotView.Model = CreatePlotModel();
@@ -218,8 +222,8 @@ namespace FallDetector.Sources
             {
                 double tempTimeStamp = timeStamp - startTimestamp;
                 azimuthOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, azimuth));
-                pitchOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, pitch));
-                rollOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, roll));
+                //pitchOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, pitch));
+                //rollOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, roll));
 
                 plotView.Model.InvalidatePlot(true);
             });

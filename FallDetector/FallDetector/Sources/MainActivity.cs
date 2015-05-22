@@ -1,24 +1,16 @@
 ﻿using System;
 
-using Android;
 using Android.App;
 using Android.Content;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
-using Android.Preferences;
 
 namespace FallDetector.Sources
 {
     [Activity(Label = "FallDetector", MainLauncher = true, Icon = "@drawable/FallingIcon")]
     public class MainActivity : Activity
     {
-        private ISharedPreferences pref;
-        private ISharedPreferencesEditor prefEditor;
-
-        private float maxTh = 2.5f; //Upper threshold
-        private float minTh = 0.7f; //lower threshold
-
         private Button accButton;
         private Button orientButton;
 
@@ -31,14 +23,6 @@ namespace FallDetector.Sources
 
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.Main);
-
-            pref = PreferenceManager.GetDefaultSharedPreferences(this);
-            prefEditor = pref.Edit();
-
-            prefEditor.PutFloat("maxTh", maxTh);
-            prefEditor.PutFloat("minTh", minTh);
-
-            prefEditor.Commit();
 
             accButton = FindViewById<Button>(Resource.Id.accelerometerButton);
             orientButton = FindViewById<Button>(Resource.Id.orientationButton);

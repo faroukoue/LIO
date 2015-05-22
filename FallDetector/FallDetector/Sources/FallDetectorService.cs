@@ -1,10 +1,10 @@
 using System;
+
 using Android.App;
 using Android.OS;
 using Android.Content;
 using Android.Hardware;
 using Android.Util;
-using Android.Preferences;
 
 
 namespace FallDetector.Sources
@@ -13,14 +13,14 @@ namespace FallDetector.Sources
     [IntentFilter(new String[] { "FallDetectorService" })]
     public class FallDetectorService : Service, ISensorEventListener
     {
-        private ISharedPreferences pref;
         private FallBroadcastReceiver receiver;
 
         private static readonly object _syncLock = new object();
         private SensorManager sensorManager;
         private Sensor accelerometerSensor;
-        private Sensor rotationSensor;
         private Sensor magnetometerSensor;
+        private Sensor gyroscopeSensor;
+
         private CustomCountDownTimer timer;
 
         private float[] lastAccelerometer;
@@ -49,7 +49,7 @@ namespace FallDetector.Sources
         public FallDetectorServiceBinder binder;
 
         private const int notificationId = 0;
-        private const float maxTh = 2.5f; //Upper threshold
+        private const float maxTh = 2.2f; //Upper threshold
         private const float minTh = 0.7f; //lower threshold
         private const long timeFallingWindow = 2; //time of the fall (in seconds)
 
@@ -72,7 +72,6 @@ namespace FallDetector.Sources
 
         public void init()
         {
-            pref = PreferenceManager.GetDefaultSharedPreferences(this);
 
             lastAccelerometer = new float[3];
             lastMagnetometer = new float[3];
@@ -84,8 +83,8 @@ namespace FallDetector.Sources
             accelerometerSensor = sensorManager.GetDefaultSensor(SensorType.Accelerometer);
             sensorManager.RegisterListener(this, accelerometerSensor, SensorDelay.Normal);
 
-            rotationSensor = sensorManager.GetDefaultSensor(SensorType.RotationVector);
-            //sensorManager.RegisterListener(this, rotationSensor, SensorDelay.Normal);
+            gyroscopeSensor = sensorManager.GetDefaultSensor(SensorType.Gyroscope);
+            //sensorManager.RegisterListener(this, gyroscopeSensor, SensorDelay.Normal);
 
             magnetometerSensor = sensorManager.GetDefaultSensor(SensorType.MagneticField);
             sensorManager.RegisterListener(this, magnetometerSensor, SensorDelay.Normal);
@@ -149,7 +148,7 @@ namespace FallDetector.Sources
                         e.Values.CopyTo(lastAccelerometer, 0);
                         lastAccelerometerSet = true;
 
-                        double accT = Math.Sqrt(ax * ax + ay * ay + az * az) / SensorManager.GravityEarth;
+                        double accT = (Math.Sqrt(ax * ax + ay * ay + az * az)) / SensorManager.GravityEarth;
 
                         if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotAccelerometer)
                             ((PlotActivity)this.binder.activity).updateAccPlot(e.Timestamp / 1e9, accT);
@@ -177,24 +176,40 @@ namespace FallDetector.Sources
                     }
 
                     break;
+
+                case Sensor.StringTypeGyroscope:
+                    lock (_syncLock)
+                    {
+                        
+                    }
+                    break;
+
             }
 
             if (lastMagnetometerSet && lastAccelerometerSet)
             {
-                SensorManager.GetRotationMatrix(rotMatrix, null, lastAccelerometer, lastMagnetometer);
-                SensorManager.GetOrientation(rotMatrix, orientationValues);
-
-                for (int i = 0; i < 3; ++i)
+                try
                 {
-                    orientationValues[i] = (float)(orientationValues[i] * (180.0 / Math.PI));
+                    SensorManager.GetRotationMatrix(rotMatrix, null, lastAccelerometer, lastMagnetometer);
+                    SensorManager.GetOrientation(rotMatrix, orientationValues);
+
+                    for (int i = 0; i < 3; ++i)
+                    {
+                        orientationValues[i] = (float)(orientationValues[i] * (180.0 / Math.PI));
+                    }
+
+                    double azimuth = orientationValues[0];
+                    double pitch = orientationValues[1];
+                    double roll = orientationValues[2];
+
+                    if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotOrientation)
+                        ((PlotActivity)this.binder.activity).updateOrientPlot(e.Timestamp / 1e9, azimuth, pitch, roll);
+                }
+                catch (Exception excep)
+                {
+                    Log.Error("FallDetectorService", excep.ToString());
                 }
 
-                double azimuth = orientationValues[0];
-                double pitch = orientationValues[1];
-                double roll = orientationValues[2];
-
-                if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotOrientation)
-                    ((PlotActivity)this.binder.activity).updateOrientPlot(e.Timestamp / 1e9, azimuth,pitch,roll);
 
                 //Console.WriteLine("Azimuth = " + orientationValues[0].ToString() + " Pitch = " + orientationValues[1].ToString() + " Roll = " + orientationValues[2].ToString());
 
