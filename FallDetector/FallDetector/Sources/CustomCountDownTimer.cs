@@ -21,7 +21,7 @@ namespace FallDetector.Sources
             Console.WriteLine("OnFinish Timer" + count.ToString());
             
             this.count = 0;
-            if (((FallDetectorService)service).FreeFallDetected && ((FallDetectorService)service).ImpactDetected)
+            if (((FallDetectorService)service).FreeFallDetected && ((FallDetectorService)service).ImpactDetected && ((FallDetectorService)service).OrientationChanged)
                 ((FallDetectorService)service).triggersFallDetected();
 
             ((FallDetectorService)service).resetFallDetection();

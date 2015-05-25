@@ -13,6 +13,8 @@ namespace FallDetector.Sources
     [IntentFilter(new String[] { "FallDetectorService" })]
     public class FallDetectorService : Service, ISensorEventListener
     {
+        private const String TAG = "FallDetectorService";
+
         private FallBroadcastReceiver receiver;
 
         private static readonly object _syncLock = new object();
@@ -29,15 +31,31 @@ namespace FallDetector.Sources
         private Boolean lastMagnetometerSet = false;
         private float[] rotMatrix;
         private float[] orientationValues;
+        private double accT = 0;
+
+        private float azimuth = 0;
+        private float pitch = 0;
+        private float roll = 0;
+        private float pitchFreeFall = 0;
+        private float pitchImpact = 0;
+        private float rollFreeFall = 0;
+        private float rollImpact = 0;
 
         private Boolean freeFallDetected_ = false;
+        private Boolean impactDetected_ = false;
+        private Boolean orientationChanged = false;
+
+        public Boolean OrientationChanged
+        {
+            get { return orientationChanged; }
+            set { orientationChanged = value; }
+        }
 
         public Boolean FreeFallDetected
         {
             get { return freeFallDetected_; }
             set { freeFallDetected_ = value; }
         }
-        private Boolean impactDetected_ = false;
 
         public Boolean ImpactDetected
         {
@@ -62,7 +80,7 @@ namespace FallDetector.Sources
 
         public override IBinder OnBind(Intent intent)
         {
-            Console.WriteLine("OnBind");
+            Log.Debug(TAG, "OnBind");
 
             binder = new FallDetectorServiceBinder(this);
             this.isBound = true;
@@ -122,8 +140,8 @@ namespace FallDetector.Sources
         public override void OnTaskRemoved(Intent rootIntent)
         {
             base.OnTaskRemoved(rootIntent);
-            Console.WriteLine("OnTaskRemoved");
 
+            Log.Debug(TAG, "OnTaskRemoved");
             this.StopSelf();
 
         }
@@ -148,7 +166,7 @@ namespace FallDetector.Sources
                         e.Values.CopyTo(lastAccelerometer, 0);
                         lastAccelerometerSet = true;
 
-                        double accT = (Math.Sqrt(ax * ax + ay * ay + az * az)) / SensorManager.GravityEarth;
+                        accT = (Math.Sqrt(ax * ax + ay * ay + az * az)) / SensorManager.GravityEarth;
 
                         if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotAccelerometer)
                             ((PlotActivity)this.binder.activity).updateAccPlot(e.Timestamp / 1e9, accT);
@@ -156,13 +174,30 @@ namespace FallDetector.Sources
                         if (accT < minTh && !this.FreeFallDetected)
                         {
                             this.FreeFallDetected = true;
+                            this.pitchFreeFall = pitch;
+                            this.rollFreeFall = roll;
                             this.timer.Start();
                             Console.WriteLine("Timer Start");
+
+                            Log.Debug(TAG, "Timer Start");
+                            Log.Debug(TAG, "pitchFreeFall : " + pitchFreeFall);
+                            Log.Debug(TAG, "rollFreeFall : " + rollFreeFall);
                         }
 
                         if (accT > maxTh && !this.ImpactDetected && this.FreeFallDetected)
                         {
                             this.ImpactDetected = true;
+                            this.pitchImpact = pitch;
+                            this.rollImpact = roll;
+
+                            float tempPitch = Math.Abs(pitchFreeFall) + Math.Abs(pitchImpact);
+                            float tempRoll = Math.Abs(rollFreeFall) + Math.Abs(rollImpact);
+
+                            if (tempPitch >= 90 || tempRoll >= 90)
+                                this.orientationChanged = true;
+
+                            Log.Debug(TAG, "pitchImpact : " + pitchImpact);
+                            Log.Debug(TAG, "rollImpact : " + rollImpact);
                         }
 
                     }
@@ -180,7 +215,7 @@ namespace FallDetector.Sources
                 case Sensor.StringTypeGyroscope:
                     lock (_syncLock)
                     {
-                        
+
                     }
                     break;
 
@@ -198,9 +233,9 @@ namespace FallDetector.Sources
                         orientationValues[i] = (float)(orientationValues[i] * (180.0 / Math.PI));
                     }
 
-                    double azimuth = orientationValues[0];
-                    double pitch = orientationValues[1];
-                    double roll = orientationValues[2];
+                    azimuth = orientationValues[0];
+                    pitch = orientationValues[1];
+                    roll = orientationValues[2];
 
                     if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotOrientation)
                         ((PlotActivity)this.binder.activity).updateOrientPlot(e.Timestamp / 1e9, azimuth, pitch, roll);
@@ -222,7 +257,7 @@ namespace FallDetector.Sources
         {
             this.sendNotification();
 
-            Console.WriteLine("Fall Detected");
+            Log.Debug(TAG, "Fall Detected");
 
         }
 
@@ -230,6 +265,7 @@ namespace FallDetector.Sources
         {
             this.FreeFallDetected = false;
             this.ImpactDetected = false;
+            this.orientationChanged = false;
         }
 
         public void updateThreshold()

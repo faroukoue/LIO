@@ -11,6 +11,7 @@ using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 
+
 namespace FallDetector.Sources
 {
     [Activity(Label = "PlotActivity")]
@@ -222,8 +223,8 @@ namespace FallDetector.Sources
             {
                 double tempTimeStamp = timeStamp - startTimestamp;
                 azimuthOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, azimuth));
-                //pitchOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, pitch));
-                //rollOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, roll));
+                pitchOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, pitch));
+                rollOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, roll));
 
                 plotView.Model.InvalidatePlot(true);
             });
