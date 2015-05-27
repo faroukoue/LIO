@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using Android.App;
 using Android.OS;
 using Android.Content;
 using Android.Hardware;
 using Android.Util;
+using Android.Preferences;
 
 
 namespace FallDetector.Sources
@@ -14,14 +17,17 @@ namespace FallDetector.Sources
     public class FallDetectorService : Service, ISensorEventListener
     {
         private const String TAG = "FallDetectorService";
+        private const String PrefTAG = "FALL_COUNT";
 
-        private FallBroadcastReceiver receiver;
+        private ISharedPreferences prefs;
+        private ISharedPreferencesEditor prefsEditor;
 
         private static readonly object _syncLock = new object();
         private SensorManager sensorManager;
         private Sensor accelerometerSensor;
         private Sensor magnetometerSensor;
         private Sensor gyroscopeSensor;
+        private Sensor rotationSensor;
 
         private CustomCountDownTimer timer;
 
@@ -32,6 +38,9 @@ namespace FallDetector.Sources
         private float[] rotMatrix;
         private float[] orientationValues;
         private double accT = 0;
+        private double inclination = 0;
+        List<double> inclinationList;
+        List<double> pitchList;
 
         private float azimuth = 0;
         private float pitch = 0;
@@ -41,9 +50,11 @@ namespace FallDetector.Sources
         private float rollFreeFall = 0;
         private float rollImpact = 0;
 
-        private Boolean freeFallDetected_ = false;
-        private Boolean impactDetected_ = false;
+        private Boolean freeFallDetected = false;
+        private Boolean impactDetected = false;
         private Boolean orientationChanged = false;
+
+        private int fallCount = -1;
 
         public Boolean OrientationChanged
         {
@@ -53,14 +64,14 @@ namespace FallDetector.Sources
 
         public Boolean FreeFallDetected
         {
-            get { return freeFallDetected_; }
-            set { freeFallDetected_ = value; }
+            get { return freeFallDetected; }
+            set { freeFallDetected = value; }
         }
 
         public Boolean ImpactDetected
         {
-            get { return impactDetected_; }
-            set { impactDetected_ = value; }
+            get { return impactDetected; }
+            set { impactDetected = value; }
         }
 
         public Boolean isBound = false;
@@ -91,10 +102,21 @@ namespace FallDetector.Sources
         public void init()
         {
 
+            prefs = PreferenceManager.GetDefaultSharedPreferences(this);
+            prefsEditor = prefs.Edit();
+
+            fallCount = prefs.GetInt(PrefTAG, 0);
+
+            prefsEditor.PutInt(PrefTAG, fallCount);
+
+
             lastAccelerometer = new float[3];
             lastMagnetometer = new float[3];
-            rotMatrix = new float[9];
+            rotMatrix = new float[16];
             orientationValues = new float[3];
+
+            inclinationList = new List<double>();
+            pitchList = new List<double>();
 
             sensorManager = (SensorManager)GetSystemService(SensorService);
 
@@ -105,15 +127,12 @@ namespace FallDetector.Sources
             //sensorManager.RegisterListener(this, gyroscopeSensor, SensorDelay.Normal);
 
             magnetometerSensor = sensorManager.GetDefaultSensor(SensorType.MagneticField);
-            sensorManager.RegisterListener(this, magnetometerSensor, SensorDelay.Normal);
+            //sensorManager.RegisterListener(this, magnetometerSensor, SensorDelay.Normal);
+
+            rotationSensor = sensorManager.GetDefaultSensor(SensorType.RotationVector);
+            sensorManager.RegisterListener(this, rotationSensor, SensorDelay.Normal);
 
             timer = new CustomCountDownTimer(timeFallingWindow * 1000, 1000, this);
-
-            receiver = new FallBroadcastReceiver();
-            var intentFilter = new IntentFilter();
-            intentFilter.AddAction("FallBroadcastReceiver");
-
-            RegisterReceiver(receiver, intentFilter);
         }
 
         [Obsolete]
@@ -168,8 +187,27 @@ namespace FallDetector.Sources
 
                         accT = (Math.Sqrt(ax * ax + ay * ay + az * az)) / SensorManager.GravityEarth;
 
-                        if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotAccelerometer)
-                            ((PlotActivity)this.binder.activity).updateAccPlot(e.Timestamp / 1e9, accT);
+                        double acosAz = Math.Acos(az / (accT * SensorManager.GravityEarth));
+                        double acosAzToDegree = acosAz * (180 / Math.PI);
+                        inclination = Math.Round(acosAzToDegree);
+
+
+                        if (this.binder != null && this.binder.activity != null)
+                        {
+
+                            if (((PlotActivity)this.binder.activity).PlotAccelerometer)
+                                ((PlotActivity)this.binder.activity).updateAccPlot(e.Timestamp / 1e9, accT);
+                            else if (((PlotActivity)this.binder.activity).PlotInclination)
+                                ((PlotActivity)this.binder.activity).updateIncliPlot(e.Timestamp / 1e9, inclination);
+
+                        }
+
+                        if (this.freeFallDetected)
+                        {
+                            inclinationList.Add(inclination);
+                            pitchList.Add(pitch);
+                        }
+
 
                         if (accT < minTh && !this.FreeFallDetected)
                         {
@@ -177,14 +215,15 @@ namespace FallDetector.Sources
                             this.pitchFreeFall = pitch;
                             this.rollFreeFall = roll;
                             this.timer.Start();
+
                             Console.WriteLine("Timer Start");
 
                             Log.Debug(TAG, "Timer Start");
-                            Log.Debug(TAG, "pitchFreeFall : " + pitchFreeFall);
-                            Log.Debug(TAG, "rollFreeFall : " + rollFreeFall);
+                            //Log.Debug(TAG, "pitchFreeFall : " + pitchFreeFall);
+                            //Log.Debug(TAG, "rollFreeFall : " + rollFreeFall);
                         }
 
-                        if (accT > maxTh && !this.ImpactDetected && this.FreeFallDetected)
+                        /*if (accT > maxTh && !this.ImpactDetected && this.FreeFallDetected)
                         {
                             this.ImpactDetected = true;
                             this.pitchImpact = pitch;
@@ -198,7 +237,7 @@ namespace FallDetector.Sources
 
                             Log.Debug(TAG, "pitchImpact : " + pitchImpact);
                             Log.Debug(TAG, "rollImpact : " + rollImpact);
-                        }
+                        }*/
 
                     }
                     break;
@@ -219,9 +258,32 @@ namespace FallDetector.Sources
                     }
                     break;
 
+                case Sensor.StringTypeRotationVector:
+                    lock (_syncLock)
+                    {
+                        float[] tempValue = new float[3];
+                        e.Values.CopyTo(tempValue, 0);
+
+                        SensorManager.GetRotationMatrixFromVector(rotMatrix, tempValue);
+                        SensorManager.GetOrientation(rotMatrix, orientationValues);
+
+                        for (int i = 0; i < 3; ++i)
+                        {
+                            orientationValues[i] = (float)(orientationValues[i] * (180.0 / Math.PI));
+                        }
+
+                        azimuth = orientationValues[0];
+                        pitch = orientationValues[1];
+                        roll = orientationValues[2];
+
+                        if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotOrientation)
+                            ((PlotActivity)this.binder.activity).updateOrientPlot(e.Timestamp / 1e9, azimuth, pitch, roll);
+                    }
+                    break;
+
             }
 
-            if (lastMagnetometerSet && lastAccelerometerSet)
+            /*if (lastMagnetometerSet && lastAccelerometerSet)
             {
                 try
                 {
@@ -245,27 +307,57 @@ namespace FallDetector.Sources
                     Log.Error("FallDetectorService", excep.ToString());
                 }
 
-
                 //Console.WriteLine("Azimuth = " + orientationValues[0].ToString() + " Pitch = " + orientationValues[1].ToString() + " Roll = " + orientationValues[2].ToString());
 
-
-            }
+            }*/
 
         }
 
         public void triggersFallDetected()
         {
             this.sendNotification();
+            this.fallCount++;
 
+            prefsEditor.PutInt(PrefTAG, this.fallCount);
+            prefsEditor.Apply();
+
+            var intentMsg = new Intent();
+            intentMsg.SetAction("FallBroadcastReceiver");
+            intentMsg.PutExtra("FallDetected", true);
+            SendBroadcast(intentMsg);
             Log.Debug(TAG, "Fall Detected");
 
         }
 
         public void resetFallDetection()
         {
+
+
+            double maxIncl = inclinationList.Max();
+            double minIncl = inclinationList.Min();
+
+            Log.Debug(TAG, "MaxIncli : " + maxIncl.ToString() + " MinIncli : " + minIncl.ToString());
+
+            double maxPitch = pitchList.Max();
+            double minPitch = pitchList.Min();
+
+            double deltaPitch = Math.Abs(maxPitch) + Math.Abs(minPitch);
+            if (deltaPitch >= 90)
+                this.orientationChanged = true;
+
+            Log.Debug(TAG, "maxPitch : " + maxPitch.ToString() + " minPitch : " + minPitch.ToString());
+
+            if (this.impactDetected && this.freeFallDetected && this.orientationChanged)
+                this.triggersFallDetected();
+
+            pitchList.Clear();
+            inclinationList.Clear();
+
             this.FreeFallDetected = false;
             this.ImpactDetected = false;
             this.orientationChanged = false;
+
+
         }
 
         public void updateThreshold()

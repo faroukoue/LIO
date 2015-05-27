@@ -20,6 +20,7 @@ namespace FallDetector.Sources
 
         private Button stopPlotButton;
         private LineSeries accelerometerSeries;
+        private LineSeries inclinationSeries;
         private LineSeries azimuthOrientationSeries;
         private LineSeries pitchOrientationSeries;
         private LineSeries rollOrientationSeries;
@@ -28,13 +29,21 @@ namespace FallDetector.Sources
         public Boolean isBound = false;
 
         private Boolean plotAccelerometer = false;
+        private Boolean plotOrientation = false;
+        private Boolean plotInclination = false;
+
+        public Boolean PlotInclination
+        {
+            get { return plotInclination; }
+            set { plotInclination = value; }
+        }
 
         public Boolean PlotAccelerometer
         {
             get { return plotAccelerometer; }
             set { plotAccelerometer = value; }
         }
-        private Boolean plotOrientation = false;
+        
 
         public Boolean PlotOrientation
         {
@@ -56,6 +65,7 @@ namespace FallDetector.Sources
             var intent = this.Intent;
             this.plotAccelerometer = intent.GetBooleanExtra("PlotAccelerometer", false);
             this.plotOrientation = intent.GetBooleanExtra("PlotOrientation", false);
+            this.plotInclination = intent.GetBooleanExtra("PlotInclination", false);
 
 
             // Set our view from the "main" layout resource
@@ -103,6 +113,7 @@ namespace FallDetector.Sources
                     azimuthOrientationSeries.Points.Clear();
                     pitchOrientationSeries.Points.Clear();
                     rollOrientationSeries.Points.Clear();
+                    inclinationSeries.Points.Clear();
 
                     plotView.Model.ResetAllAxes();
                     plotView.InvalidatePlot(false);
@@ -144,10 +155,10 @@ namespace FallDetector.Sources
         private PlotModel CreatePlotModel()
         {
 
-            var plotModel = new PlotModel { Title = "Accelerometer" };
+            var plotModel = new PlotModel {};
 
-            plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Time" });
-            plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, /*Maximum = 5, Minimum = 0,*/ Title = "Acc" });
+            plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "TimeStamp" });
+            plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, /*Maximum = 5, Minimum = 0,*/});
 
             accelerometerSeries = new LineSeries
             {
@@ -158,6 +169,19 @@ namespace FallDetector.Sources
                 MarkerFill = OxyColors.Black,
                 Color = OxyColors.Red,
                 Smooth = true,
+                Title = "Accelerometer"
+            };
+
+            inclinationSeries = new LineSeries
+            {
+                MarkerType = MarkerType.Square,
+                MarkerSize = 4,
+                MarkerStrokeThickness = 4,
+                MarkerStroke = OxyColors.White,
+                MarkerFill = OxyColors.Black,
+                Color = OxyColors.Blue,
+                Smooth = true,
+                Title = "Inclination"
             };
 
             azimuthOrientationSeries = new LineSeries
@@ -197,6 +221,7 @@ namespace FallDetector.Sources
             plotModel.Series.Add(azimuthOrientationSeries);
             plotModel.Series.Add(pitchOrientationSeries);
             plotModel.Series.Add(rollOrientationSeries);
+            plotModel.Series.Add(inclinationSeries);
 
             return plotModel;
         }
@@ -222,10 +247,23 @@ namespace FallDetector.Sources
             RunOnUiThread(() =>
             {
                 double tempTimeStamp = timeStamp - startTimestamp;
-                azimuthOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, azimuth));
+                //azimuthOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, azimuth));
                 pitchOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, pitch));
-                rollOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, roll));
+                //rollOrientationSeries.Points.Add(new DataPoint(tempTimeStamp, roll));
 
+                plotView.Model.InvalidatePlot(true);
+            });
+        }
+
+        public void updateIncliPlot(double xValue, double yValue)
+        {
+            if (startTimestamp == -1)
+                startTimestamp = xValue;
+
+            RunOnUiThread(() =>
+            {
+                double tempTimeStamp = xValue - startTimestamp;
+                inclinationSeries.Points.Add(new DataPoint(tempTimeStamp, yValue));
                 plotView.Model.InvalidatePlot(true);
             });
         }
