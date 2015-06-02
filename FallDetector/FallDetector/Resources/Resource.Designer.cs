@@ -103,8 +103,8 @@ namespace FallDetector
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7f070003
-			public const int accelerometerButton = 2131165187;
+			// aapt resource value: 0x7f070004
+			public const int accelerometerButton = 2131165188;
 			
 			// aapt resource value: 0x7f070002
 			public const int button1 = 2131165186;
@@ -118,8 +118,8 @@ namespace FallDetector
 			// aapt resource value: 0x7f070006
 			public const int inclinationButton = 2131165190;
 			
-			// aapt resource value: 0x7f070004
-			public const int orientationButton = 2131165188;
+			// aapt resource value: 0x7f070003
+			public const int orientationButton = 2131165187;
 			
 			// aapt resource value: 0x7f070008
 			public const int plotmodel = 2131165192;

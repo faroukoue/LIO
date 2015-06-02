@@ -19,11 +19,14 @@ namespace FallDetector.Sources
     {
 
         private Button stopPlotButton;
+
         private LineSeries accelerometerSeries;
         private LineSeries inclinationSeries;
         private LineSeries azimuthOrientationSeries;
         private LineSeries pitchOrientationSeries;
         private LineSeries rollOrientationSeries;
+        private LineSeries gyroscopeSeries;
+
         private PlotView plotView;
         private double startTimestamp = -1;
         public Boolean isBound = false;
@@ -114,6 +117,7 @@ namespace FallDetector.Sources
                     pitchOrientationSeries.Points.Clear();
                     rollOrientationSeries.Points.Clear();
                     inclinationSeries.Points.Clear();
+                    gyroscopeSeries.Points.Clear();
 
                     plotView.Model.ResetAllAxes();
                     plotView.InvalidatePlot(false);
@@ -217,11 +221,23 @@ namespace FallDetector.Sources
                 Smooth = true,
             };
 
+            gyroscopeSeries = new LineSeries
+            {
+                MarkerType = MarkerType.Square,
+                MarkerSize = 4,
+                MarkerStrokeThickness = 4,
+                MarkerStroke = OxyColors.White,
+                MarkerFill = OxyColors.Black,
+                Color = OxyColors.Gold,
+                Smooth = true,
+            };
+
             plotModel.Series.Add(accelerometerSeries);
             plotModel.Series.Add(azimuthOrientationSeries);
             plotModel.Series.Add(pitchOrientationSeries);
             plotModel.Series.Add(rollOrientationSeries);
             plotModel.Series.Add(inclinationSeries);
+            plotModel.Series.Add(gyroscopeSeries);
 
             return plotModel;
         }
@@ -264,6 +280,22 @@ namespace FallDetector.Sources
             {
                 double tempTimeStamp = xValue - startTimestamp;
                 inclinationSeries.Points.Add(new DataPoint(tempTimeStamp, yValue));
+                plotView.Model.InvalidatePlot(true);
+            });
+        }
+
+        public void updateGyroscopePlot(double timeStamp, double azimuth, double pitch, double roll)
+        {
+            if (startTimestamp == -1)
+                startTimestamp = timeStamp;
+
+            RunOnUiThread(() =>
+            {
+                double tempTimeStamp = timeStamp - startTimestamp;
+                //gyroscopeSeries.Points.Add(new DataPoint(tempTimeStamp, azimuth));
+                gyroscopeSeries.Points.Add(new DataPoint(tempTimeStamp, pitch));
+                //gyroscopeSeries.Points.Add(new DataPoint(tempTimeStamp, roll));
+
                 plotView.Model.InvalidatePlot(true);
             });
         }

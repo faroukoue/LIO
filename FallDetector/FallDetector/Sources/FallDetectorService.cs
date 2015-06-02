@@ -31,24 +31,21 @@ namespace FallDetector.Sources
 
         private CustomCountDownTimer timer;
 
-        private float[] lastAccelerometer;
-        private float[] lastMagnetometer;
-        private Boolean lastAccelerometerSet = false;
-        private Boolean lastMagnetometerSet = false;
         private float[] rotMatrix;
         private float[] orientationValues;
+        private float[] rateOfRotation;
+
         private double accT = 0;
         private double inclination = 0;
         List<double> inclinationList;
         List<double> pitchList;
+        List<double> omegaPitch;
+        List<double> rollList;
+        List<double> omegaRoll;
 
         private float azimuth = 0;
         private float pitch = 0;
         private float roll = 0;
-        private float pitchFreeFall = 0;
-        private float pitchImpact = 0;
-        private float rollFreeFall = 0;
-        private float rollImpact = 0;
 
         private Boolean freeFallDetected = false;
         private Boolean impactDetected = false;
@@ -78,8 +75,8 @@ namespace FallDetector.Sources
         public FallDetectorServiceBinder binder;
 
         private const int notificationId = 0;
-        private const float maxTh = 2.2f; //Upper threshold
-        private const float minTh = 0.7f; //lower threshold
+        private const float maxAccTh = 2.2f; //Upper threshold
+        private const float minAccTh = 0.7f; //lower threshold
         private const long timeFallingWindow = 2; //time of the fall (in seconds)
 
 
@@ -101,7 +98,6 @@ namespace FallDetector.Sources
 
         public void init()
         {
-
             prefs = PreferenceManager.GetDefaultSharedPreferences(this);
             prefsEditor = prefs.Edit();
 
@@ -109,14 +105,15 @@ namespace FallDetector.Sources
 
             prefsEditor.PutInt(PrefTAG, fallCount);
 
-
-            lastAccelerometer = new float[3];
-            lastMagnetometer = new float[3];
             rotMatrix = new float[16];
             orientationValues = new float[3];
+            rateOfRotation = new float[3];
 
             inclinationList = new List<double>();
             pitchList = new List<double>();
+            rollList = new List<double>();
+            omegaPitch = new List<double>();
+            omegaRoll = new List<double>();
 
             sensorManager = (SensorManager)GetSystemService(SensorService);
 
@@ -124,7 +121,7 @@ namespace FallDetector.Sources
             sensorManager.RegisterListener(this, accelerometerSensor, SensorDelay.Normal);
 
             gyroscopeSensor = sensorManager.GetDefaultSensor(SensorType.Gyroscope);
-            //sensorManager.RegisterListener(this, gyroscopeSensor, SensorDelay.Normal);
+            sensorManager.RegisterListener(this, gyroscopeSensor, SensorDelay.Normal);
 
             magnetometerSensor = sensorManager.GetDefaultSensor(SensorType.MagneticField);
             //sensorManager.RegisterListener(this, magnetometerSensor, SensorDelay.Normal);
@@ -182,9 +179,6 @@ namespace FallDetector.Sources
                         float ay = e.Values[1];
                         float az = e.Values[2];
 
-                        e.Values.CopyTo(lastAccelerometer, 0);
-                        lastAccelerometerSet = true;
-
                         accT = (Math.Sqrt(ax * ax + ay * ay + az * az)) / SensorManager.GravityEarth;
 
                         double acosAz = Math.Acos(az / (accT * SensorManager.GravityEarth));
@@ -196,64 +190,27 @@ namespace FallDetector.Sources
                         {
 
                             if (((PlotActivity)this.binder.activity).PlotAccelerometer)
+                            {
                                 ((PlotActivity)this.binder.activity).updateAccPlot(e.Timestamp / 1e9, accT);
-                            else if (((PlotActivity)this.binder.activity).PlotInclination)
-                                ((PlotActivity)this.binder.activity).updateIncliPlot(e.Timestamp / 1e9, inclination);
+                            }
+
+                            /*else if (((PlotActivity)this.binder.activity).PlotInclination)
+                                ((PlotActivity)this.binder.activity).updateIncliPlot(e.Timestamp / 1e9, inclination);*/
 
                         }
 
-                        if (this.freeFallDetected)
-                        {
-                            inclinationList.Add(inclination);
-                            pitchList.Add(pitch);
-                        }
-
-
-                        if (accT < minTh && !this.FreeFallDetected)
+                        if (accT < minAccTh && !this.FreeFallDetected)
                         {
                             this.FreeFallDetected = true;
-                            this.pitchFreeFall = pitch;
-                            this.rollFreeFall = roll;
                             this.timer.Start();
 
-                            Console.WriteLine("Timer Start");
-
                             Log.Debug(TAG, "Timer Start");
-                            //Log.Debug(TAG, "pitchFreeFall : " + pitchFreeFall);
-                            //Log.Debug(TAG, "rollFreeFall : " + rollFreeFall);
                         }
 
-                        /*if (accT > maxTh && !this.ImpactDetected && this.FreeFallDetected)
+                        if (accT > maxAccTh && !this.ImpactDetected && this.FreeFallDetected)
                         {
                             this.ImpactDetected = true;
-                            this.pitchImpact = pitch;
-                            this.rollImpact = roll;
-
-                            float tempPitch = Math.Abs(pitchFreeFall) + Math.Abs(pitchImpact);
-                            float tempRoll = Math.Abs(rollFreeFall) + Math.Abs(rollImpact);
-
-                            if (tempPitch >= 90 || tempRoll >= 90)
-                                this.orientationChanged = true;
-
-                            Log.Debug(TAG, "pitchImpact : " + pitchImpact);
-                            Log.Debug(TAG, "rollImpact : " + rollImpact);
-                        }*/
-
-                    }
-                    break;
-
-                case Sensor.StringTypeMagneticField:
-                    lock (_syncLock)
-                    {
-                        e.Values.CopyTo(lastMagnetometer, 0);
-                        lastMagnetometerSet = true;
-                    }
-
-                    break;
-
-                case Sensor.StringTypeGyroscope:
-                    lock (_syncLock)
-                    {
+                        }
 
                     }
                     break;
@@ -278,38 +235,32 @@ namespace FallDetector.Sources
 
                         if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotOrientation)
                             ((PlotActivity)this.binder.activity).updateOrientPlot(e.Timestamp / 1e9, azimuth, pitch, roll);
+
+
+                    }
+                    break;
+
+                case Sensor.StringTypeGyroscope:
+                    lock (_syncLock)
+                    {
+                        e.Values.CopyTo(rateOfRotation, 0);
+
+                        if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotInclination)
+                            ((PlotActivity)this.binder.activity).updateGyroscopePlot(e.Timestamp / 1e9, rateOfRotation[2], rateOfRotation[0], rateOfRotation[1]);
+
                     }
                     break;
 
             }
 
-            /*if (lastMagnetometerSet && lastAccelerometerSet)
+            if (this.freeFallDetected)
             {
-                try
-                {
-                    SensorManager.GetRotationMatrix(rotMatrix, null, lastAccelerometer, lastMagnetometer);
-                    SensorManager.GetOrientation(rotMatrix, orientationValues);
-
-                    for (int i = 0; i < 3; ++i)
-                    {
-                        orientationValues[i] = (float)(orientationValues[i] * (180.0 / Math.PI));
-                    }
-
-                    azimuth = orientationValues[0];
-                    pitch = orientationValues[1];
-                    roll = orientationValues[2];
-
-                    if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotOrientation)
-                        ((PlotActivity)this.binder.activity).updateOrientPlot(e.Timestamp / 1e9, azimuth, pitch, roll);
-                }
-                catch (Exception excep)
-                {
-                    Log.Error("FallDetectorService", excep.ToString());
-                }
-
-                //Console.WriteLine("Azimuth = " + orientationValues[0].ToString() + " Pitch = " + orientationValues[1].ToString() + " Roll = " + orientationValues[2].ToString());
-
-            }*/
+                inclinationList.Add(inclination);
+                pitchList.Add(pitch);
+                omegaPitch.Add(rateOfRotation[0]);
+                rollList.Add(roll);
+                omegaRoll.Add(rateOfRotation[1]);
+            }
 
         }
 
@@ -329,40 +280,57 @@ namespace FallDetector.Sources
 
         }
 
-        public void resetFallDetection()
+        public void notifyFallDetection()
         {
-
 
             double maxIncl = inclinationList.Max();
             double minIncl = inclinationList.Min();
 
-            Log.Debug(TAG, "MaxIncli : " + maxIncl.ToString() + " MinIncli : " + minIncl.ToString());
-
             double maxPitch = pitchList.Max();
             double minPitch = pitchList.Min();
-
             double deltaPitch = Math.Abs(maxPitch) + Math.Abs(minPitch);
-            if (deltaPitch >= 90)
+
+            double maxRoll = rollList.Max();
+            double minRoll = rollList.Min();
+            double deltaRoll = Math.Abs(maxRoll) + Math.Abs(minRoll);
+
+            double maxOmegaPitch = Math.Abs(omegaPitch.Max());
+            double minOmegaPitch = Math.Abs(omegaPitch.Min());
+
+            double maxOmegaRoll = Math.Abs(omegaRoll.Max());
+            double minOmegaRoll = Math.Abs(omegaRoll.Min());
+
+            bool omegaPitchTh = (maxOmegaPitch > 10) || (minOmegaPitch > 10);
+            bool omegaRollTh = (maxOmegaRoll > 10) || (minOmegaRoll > 10);
+
+            if ((deltaPitch >= 90 && omegaPitchTh) || (deltaRoll >= 90 && omegaRollTh))
                 this.orientationChanged = true;
 
+            Log.Debug(TAG, "omegaRollTh : " + omegaRollTh.ToString());
+            Log.Debug(TAG, "omegaPitchTh : " + omegaPitchTh.ToString());
+            Log.Debug(TAG, "MaxIncli : " + maxIncl.ToString() + " MinIncli : " + minIncl.ToString());
             Log.Debug(TAG, "maxPitch : " + maxPitch.ToString() + " minPitch : " + minPitch.ToString());
+            Log.Debug(TAG, "maxRoll : " + maxRoll.ToString() + " minRoll : " + minRoll.ToString());
+
 
             if (this.impactDetected && this.freeFallDetected && this.orientationChanged)
                 this.triggersFallDetected();
 
+            this.reset();
+
+        }
+
+        private void reset()
+        {
             pitchList.Clear();
             inclinationList.Clear();
+            rollList.Clear();
+            omegaPitch.Clear();
+            omegaRoll.Clear();
 
             this.FreeFallDetected = false;
             this.ImpactDetected = false;
             this.orientationChanged = false;
-
-
-        }
-
-        public void updateThreshold()
-        {
-            Console.WriteLine("updateThreshold" + maxTh.ToString() + minTh.ToString());
         }
 
         public void sendNotification()

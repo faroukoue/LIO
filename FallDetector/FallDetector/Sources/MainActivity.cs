@@ -28,9 +28,7 @@ namespace FallDetector.Sources
 
             // Set our view from the "main" layout resource
             SetContentView(Resource.Layout.Main);
-
             prefs = PreferenceManager.GetDefaultSharedPreferences(this);
-
 
             accButton = FindViewById<Button>(Resource.Id.accelerometerButton);
             orientButton = FindViewById<Button>(Resource.Id.orientationButton);
