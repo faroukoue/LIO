@@ -37,6 +37,7 @@ namespace FallDetector.Sources
 
         private double accT = 0;
         private double inclination = 0;
+        private double omegaAmpl = 0;
         List<double> inclinationList;
         List<double> pitchList;
         List<double> omegaPitch;
@@ -50,6 +51,7 @@ namespace FallDetector.Sources
         private Boolean freeFallDetected = false;
         private Boolean impactDetected = false;
         private Boolean orientationChanged = false;
+        private Boolean omegaAmplitudeChanged = false;
 
         private int fallCount = -1;
 
@@ -76,7 +78,8 @@ namespace FallDetector.Sources
 
         private const int notificationId = 0;
         private const float maxAccTh = 2.2f; //Upper threshold
-        private const float minAccTh = 0.7f; //lower threshold
+        private const float minAccTh = 0.7f; //Lower threshold
+        private const float omegaTh = 11f; //Omega threshold
         private const long timeFallingWindow = 2; //time of the fall (in seconds)
 
 
@@ -168,7 +171,6 @@ namespace FallDetector.Sources
 
         public void OnSensorChanged(SensorEvent e)
         {
-            //Console.WriteLine(e.Sensor.StringType + " / " + Sensor.StringTypeAccelerometer);
 
             switch (e.Sensor.StringType)
             {
@@ -184,7 +186,6 @@ namespace FallDetector.Sources
                         double acosAz = Math.Acos(az / (accT * SensorManager.GravityEarth));
                         double acosAzToDegree = acosAz * (180 / Math.PI);
                         inclination = Math.Round(acosAzToDegree);
-
 
                         if (this.binder != null && this.binder.activity != null)
                         {
@@ -245,8 +246,17 @@ namespace FallDetector.Sources
                     {
                         e.Values.CopyTo(rateOfRotation, 0);
 
+                        float ax = rateOfRotation[0]; //Pitch
+                        float ay = rateOfRotation[1]; //Roll
+                        float az = rateOfRotation[2]; //Azimuth
+
+                        omegaAmpl = (Math.Sqrt(ax * ax + ay * ay));
+
+                        if (omegaAmpl > omegaTh && this.freeFallDetected && !this.omegaAmplitudeChanged)
+                            this.omegaAmplitudeChanged = true;
+
                         if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotInclination)
-                            ((PlotActivity)this.binder.activity).updateGyroscopePlot(e.Timestamp / 1e9, rateOfRotation[2], rateOfRotation[0], rateOfRotation[1]);
+                            ((PlotActivity)this.binder.activity).updateGyroscopePlot(e.Timestamp / 1e9, omegaAmpl);
 
                     }
                     break;
@@ -276,6 +286,7 @@ namespace FallDetector.Sources
             intentMsg.SetAction("FallBroadcastReceiver");
             intentMsg.PutExtra("FallDetected", true);
             SendBroadcast(intentMsg);
+
             Log.Debug(TAG, "Fall Detected");
 
         }
@@ -300,20 +311,20 @@ namespace FallDetector.Sources
             double maxOmegaRoll = Math.Abs(omegaRoll.Max());
             double minOmegaRoll = Math.Abs(omegaRoll.Min());
 
-            bool omegaPitchTh = (maxOmegaPitch > 10) || (minOmegaPitch > 10);
-            bool omegaRollTh = (maxOmegaRoll > 10) || (minOmegaRoll > 10);
+            bool omegaPitchTh = (maxOmegaPitch > omegaTh) || (minOmegaPitch > omegaTh);
+            bool omegaRollTh = (maxOmegaRoll > omegaTh) || (minOmegaRoll > omegaTh);
 
-            if ((deltaPitch >= 90 && omegaPitchTh) || (deltaRoll >= 90 && omegaRollTh))
+            if ((deltaPitch >= 90) || (deltaRoll >= 90))
                 this.orientationChanged = true;
 
-            Log.Debug(TAG, "omegaRollTh : " + omegaRollTh.ToString());
-            Log.Debug(TAG, "omegaPitchTh : " + omegaPitchTh.ToString());
+            //Log.Debug(TAG, "omegaRollTh : " + omegaRollTh.ToString());
+            //Log.Debug(TAG, "omegaPitchTh : " + omegaPitchTh.ToString());
             Log.Debug(TAG, "MaxIncli : " + maxIncl.ToString() + " MinIncli : " + minIncl.ToString());
             Log.Debug(TAG, "maxPitch : " + maxPitch.ToString() + " minPitch : " + minPitch.ToString());
             Log.Debug(TAG, "maxRoll : " + maxRoll.ToString() + " minRoll : " + minRoll.ToString());
 
 
-            if (this.impactDetected && this.freeFallDetected && this.orientationChanged)
+            if (this.impactDetected && this.freeFallDetected && this.orientationChanged && this.omegaAmplitudeChanged)
                 this.triggersFallDetected();
 
             this.reset();
@@ -331,6 +342,7 @@ namespace FallDetector.Sources
             this.FreeFallDetected = false;
             this.ImpactDetected = false;
             this.orientationChanged = false;
+            this.omegaAmplitudeChanged = false;
         }
 
         public void sendNotification()

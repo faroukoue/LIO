@@ -284,7 +284,7 @@ namespace FallDetector.Sources
             });
         }
 
-        public void updateGyroscopePlot(double timeStamp, double azimuth, double pitch, double roll)
+        public void updateGyroscopePlot(double timeStamp, double omegaAmpl)
         {
             if (startTimestamp == -1)
                 startTimestamp = timeStamp;
@@ -293,7 +293,7 @@ namespace FallDetector.Sources
             {
                 double tempTimeStamp = timeStamp - startTimestamp;
                 //gyroscopeSeries.Points.Add(new DataPoint(tempTimeStamp, azimuth));
-                gyroscopeSeries.Points.Add(new DataPoint(tempTimeStamp, pitch));
+                gyroscopeSeries.Points.Add(new DataPoint(tempTimeStamp, omegaAmpl));
                 //gyroscopeSeries.Points.Add(new DataPoint(tempTimeStamp, roll));
 
                 plotView.Model.InvalidatePlot(true);

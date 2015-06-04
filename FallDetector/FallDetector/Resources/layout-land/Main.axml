@@ -38,7 +38,7 @@
     <Button
         p1:background="@drawable/CustomButton"
         p1:textColor="@color/CustomTextButtonColor"
-        p1:text="Inclination"
+        p1:text="Gyroscope"
         p1:layout_centerHorizontal="true"
         p1:layout_centerVertical="true"
         p1:layout_width="190.0dp"
