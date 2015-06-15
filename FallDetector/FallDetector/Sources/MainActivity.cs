@@ -27,10 +27,10 @@ namespace FallDetector.Sources
             Console.WriteLine("MainActivity OnCreate");
 
             // Set our view from the "main" layout resource
-            SetContentView(Resource.Layout.Main);
+            SetContentView(Resource.Layout.AlertLayout);
             prefs = PreferenceManager.GetDefaultSharedPreferences(this);
 
-            accButton = FindViewById<Button>(Resource.Id.accelerometerButton);
+            /*accButton = FindViewById<Button>(Resource.Id.accelerometerButton);
             orientButton = FindViewById<Button>(Resource.Id.orientationButton);
             inclinButton = FindViewById<Button>(Resource.Id.inclinationButton);
             countTextView = FindViewById<TextView>(Resource.Id.fallCountTextView);
@@ -58,7 +58,7 @@ namespace FallDetector.Sources
             inclinButton.Click += delegate
             {
                 this.onClick(inclinButton);
-            };
+            };*/
         }
 
         protected override void OnResume()
@@ -86,22 +86,16 @@ namespace FallDetector.Sources
                 plotActivityIntent.PutExtra("PlotInclination", true);
                 StartActivity(plotActivityIntent);
             }
-
         }
 
         public void updateUI()
         {
-
             RunOnUiThread(() =>
             {
                 int count = prefs.GetInt("FALL_COUNT", 0);
                 countTextView.Text = "Count " + count.ToString();
 
             });
-
         }
-
     }
 }
-
-

@@ -292,9 +292,7 @@ namespace FallDetector.Sources
             RunOnUiThread(() =>
             {
                 double tempTimeStamp = timeStamp - startTimestamp;
-                //gyroscopeSeries.Points.Add(new DataPoint(tempTimeStamp, azimuth));
                 gyroscopeSeries.Points.Add(new DataPoint(tempTimeStamp, omegaAmpl));
-                //gyroscopeSeries.Points.Add(new DataPoint(tempTimeStamp, roll));
 
                 plotView.Model.InvalidatePlot(true);
             });

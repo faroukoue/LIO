@@ -106,6 +106,12 @@
       <SubType>Designer</SubType>
     </AndroidResource>
     <AndroidResource Include="Resources\color\CustomTextButtonColor.xml" />
+    <AndroidResource Include="Resources\drawable\ArrowButtonRight.xml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
+    <AndroidResource Include="Resources\drawable\ArrowButtonLeft.xml" />
+    <AndroidResource Include="Resources\drawable\Warning_Image_View.png" />
+    <AndroidResource Include="Resources\color\ArrowButtonSelector.xml" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />

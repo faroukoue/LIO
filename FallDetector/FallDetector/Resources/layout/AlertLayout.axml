@@ -5,22 +5,54 @@
     p1:id="@+id/relativeLayout1"
     p1:minWidth="25px"
     p1:minHeight="25px"
-    p1:background="@drawable/Custom_Background">
+    p1:background="#ffffff">
+    <ImageView
+        p1:src="@drawable/Warning_Image_View"
+        p1:layout_width="match_parent"
+        p1:layout_height="226.3dp"
+        p1:id="@+id/imageView1"
+        p1:layout_marginTop="2dp" />
     <TextView
-        p1:text="Fall"
+        p1:text="Fall Detected"
         p1:textAppearance="?android:attr/textAppearanceLarge"
-        p1:layout_width="97.3dp"
-        p1:layout_height="94.8dp"
+        p1:layout_width="match_parent"
+        p1:layout_height="57.2dp"
         p1:id="@+id/fallTextView"
-        p1:textColor="#1F1F21"
-        p1:textSize=" 50dp"
         p1:layout_centerVertical="true"
-        p1:layout_centerHorizontal="true" />
-    <Button
-        p1:text="Ok"
+        p1:layout_centerHorizontal="true"
+        style="@style/styleText" />
+    <TextView
+        p1:text="0"
+        p1:textAppearance="?android:attr/textAppearanceSmall"
         p1:layout_width="wrap_content"
         p1:layout_height="wrap_content"
         p1:layout_below="@id/fallTextView"
-        p1:id="@+id/button1"
-        p1:layout_centerHorizontal="true" />
+        p1:layout_centerHorizontal="true"
+        p1:id="@+id/CountTextView"
+        style="@style/styleText" />
+    <Button
+        p1:text="I'm OK"
+        p1:background="@drawable/ArrowButtonRight"
+        p1:textColor="@color/ArrowButtonSelector"
+        p1:layout_width="170dp"
+        p1:layout_height="60dp"
+        p1:layout_below="@id/fallTextView"
+        p1:id="@+id/OKButton"
+        p1:layout_centerHorizontal="true"
+        p1:layout_alignParentLeft="true"
+        p1:layout_marginTop="60dp"
+        style="@style/styleButtonRight" />
+    <Button
+        p1:text="Report"
+        p1:background="@drawable/ArrowButtonLeft"
+        p1:textColor="@color/ArrowButtonSelector"
+        p1:layout_width="170dp"
+        p1:layout_height="60dp"
+        p1:layout_below="@id/fallTextView"
+        p1:id="@+id/ReportButton"
+        p1:layout_alignParentRight="true"
+        p1:layout_toRightOf="@id/OKButton"
+        p1:layout_marginTop="60dp"
+        style="@style/styleButtonLeft"
+        p1:layout_marginLeft="25dp" />
 </RelativeLayout>

@@ -19,13 +19,18 @@ namespace FallDetector.Sources
         private const String TAG = "FallDetectorService";
         private const String PrefTAG = "FALL_COUNT";
 
+        private const int notificationId = 0;
+        private const float maxAccTh = 1.7f; //Upper threshold
+        private const float minAccTh = 0.7f; //Lower threshold
+        private const float omegaTh = 8f; //Omega threshold
+        private const long timeFallingWindow = 2; //time of the fall (in seconds)
+
         private ISharedPreferences prefs;
         private ISharedPreferencesEditor prefsEditor;
 
         private static readonly object _syncLock = new object();
         private SensorManager sensorManager;
         private Sensor accelerometerSensor;
-        private Sensor magnetometerSensor;
         private Sensor gyroscopeSensor;
         private Sensor rotationSensor;
 
@@ -38,11 +43,11 @@ namespace FallDetector.Sources
         private double accT = 0;
         private double inclination = 0;
         private double omegaAmpl = 0;
-        List<double> inclinationList;
-        List<double> pitchList;
-        List<double> omegaPitch;
-        List<double> rollList;
-        List<double> omegaRoll;
+        private List<double> inclinationList;
+        private List<double> pitchList;
+        private List<double> omegaPitch;
+        private List<double> rollList;
+        private List<double> omegaRoll;
 
         private float azimuth = 0;
         private float pitch = 0;
@@ -76,17 +81,10 @@ namespace FallDetector.Sources
         public Boolean isBound = false;
         public FallDetectorServiceBinder binder;
 
-        private const int notificationId = 0;
-        private const float maxAccTh = 2.2f; //Upper threshold
-        private const float minAccTh = 0.7f; //Lower threshold
-        private const float omegaTh = 11f; //Omega threshold
-        private const long timeFallingWindow = 2; //time of the fall (in seconds)
-
 
         public FallDetectorService()
             : base()
         {
-
         }
 
         public override IBinder OnBind(Intent intent)
@@ -125,9 +123,6 @@ namespace FallDetector.Sources
 
             gyroscopeSensor = sensorManager.GetDefaultSensor(SensorType.Gyroscope);
             sensorManager.RegisterListener(this, gyroscopeSensor, SensorDelay.Normal);
-
-            magnetometerSensor = sensorManager.GetDefaultSensor(SensorType.MagneticField);
-            //sensorManager.RegisterListener(this, magnetometerSensor, SensorDelay.Normal);
 
             rotationSensor = sensorManager.GetDefaultSensor(SensorType.RotationVector);
             sensorManager.RegisterListener(this, rotationSensor, SensorDelay.Normal);
@@ -171,96 +166,22 @@ namespace FallDetector.Sources
 
         public void OnSensorChanged(SensorEvent e)
         {
+            //Log.Debug(TAG, e.Sensor.StringType);
 
-            switch (e.Sensor.StringType)
+            if (e.Sensor == accelerometerSensor)
             {
-                case Sensor.StringTypeAccelerometer:
-                    lock (_syncLock)
-                    {
-                        float ax = e.Values[0];
-                        float ay = e.Values[1];
-                        float az = e.Values[2];
+                this.updateAccelerometer(e);
 
-                        accT = (Math.Sqrt(ax * ax + ay * ay + az * az)) / SensorManager.GravityEarth;
+            }
+            Log.Debug(TAG, e.Sensor.ToString());
 
-                        double acosAz = Math.Acos(az / (accT * SensorManager.GravityEarth));
-                        double acosAzToDegree = acosAz * (180 / Math.PI);
-                        inclination = Math.Round(acosAzToDegree);
-
-                        if (this.binder != null && this.binder.activity != null)
-                        {
-
-                            if (((PlotActivity)this.binder.activity).PlotAccelerometer)
-                            {
-                                ((PlotActivity)this.binder.activity).updateAccPlot(e.Timestamp / 1e9, accT);
-                            }
-
-                            /*else if (((PlotActivity)this.binder.activity).PlotInclination)
-                                ((PlotActivity)this.binder.activity).updateIncliPlot(e.Timestamp / 1e9, inclination);*/
-
-                        }
-
-                        if (accT < minAccTh && !this.FreeFallDetected)
-                        {
-                            this.FreeFallDetected = true;
-                            this.timer.Start();
-
-                            Log.Debug(TAG, "Timer Start");
-                        }
-
-                        if (accT > maxAccTh && !this.ImpactDetected && this.FreeFallDetected)
-                        {
-                            this.ImpactDetected = true;
-                        }
-
-                    }
-                    break;
-
-                case Sensor.StringTypeRotationVector:
-                    lock (_syncLock)
-                    {
-                        float[] tempValue = new float[3];
-                        e.Values.CopyTo(tempValue, 0);
-
-                        SensorManager.GetRotationMatrixFromVector(rotMatrix, tempValue);
-                        SensorManager.GetOrientation(rotMatrix, orientationValues);
-
-                        for (int i = 0; i < 3; ++i)
-                        {
-                            orientationValues[i] = (float)(orientationValues[i] * (180.0 / Math.PI));
-                        }
-
-                        azimuth = orientationValues[0];
-                        pitch = orientationValues[1];
-                        roll = orientationValues[2];
-
-                        if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotOrientation)
-                            ((PlotActivity)this.binder.activity).updateOrientPlot(e.Timestamp / 1e9, azimuth, pitch, roll);
-
-
-                    }
-                    break;
-
-                case Sensor.StringTypeGyroscope:
-                    lock (_syncLock)
-                    {
-                        e.Values.CopyTo(rateOfRotation, 0);
-
-                        float ax = rateOfRotation[0]; //Pitch
-                        float ay = rateOfRotation[1]; //Roll
-                        float az = rateOfRotation[2]; //Azimuth
-
-                        omegaAmpl = (Math.Sqrt(ax * ax + ay * ay));
-
-                        if (omegaAmpl > omegaTh && this.freeFallDetected && !this.omegaAmplitudeChanged)
-                            this.omegaAmplitudeChanged = true;
-
-                        if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotInclination)
-                            ((PlotActivity)this.binder.activity).updateGyroscopePlot(e.Timestamp / 1e9, omegaAmpl);
-
-                    }
-                    break;
-
+            if (e.Sensor == rotationSensor)
+            {
+                this.updateRotation(e);
+            }
+            if (e.Sensor == gyroscopeSensor)
+            {
+                this.updateGyroscope(e);
             }
 
             if (this.freeFallDetected)
@@ -291,9 +212,98 @@ namespace FallDetector.Sources
 
         }
 
+        private void updateAccelerometer(SensorEvent e)
+        {
+            Log.Debug(TAG, "accelerometerSensor");
+            lock (_syncLock)
+            {
+                float ax = e.Values[0];
+                float ay = e.Values[1];
+                float az = e.Values[2];
+
+                accT = (Math.Sqrt(ax * ax + ay * ay + az * az)) / SensorManager.GravityEarth;
+
+                double acosAz = Math.Acos(az / (accT * SensorManager.GravityEarth));
+                double acosAzToDegree = acosAz * (180 / Math.PI);
+                inclination = Math.Round(acosAzToDegree);
+
+                if (this.binder != null && this.binder.activity != null)
+                {
+                    if (((PlotActivity)this.binder.activity).PlotAccelerometer)
+                    {
+                        ((PlotActivity)this.binder.activity).updateAccPlot(e.Timestamp / 1e9, accT);
+                    }
+
+                    /*else if (((PlotActivity)this.binder.activity).PlotInclination)
+                        ((PlotActivity)this.binder.activity).updateIncliPlot(e.Timestamp / 1e9, inclination);*/
+                }
+
+                if (accT < minAccTh && !this.FreeFallDetected)
+                {
+                    this.FreeFallDetected = true;
+                    this.timer.Start();
+
+                    Log.Debug(TAG, "Timer Start");
+                }
+
+                if (accT > maxAccTh && !this.ImpactDetected && this.FreeFallDetected)
+                {
+                    this.ImpactDetected = true;
+                }
+
+            }
+        }
+
+        private void updateRotation(SensorEvent e)
+        {
+            lock (_syncLock)
+            {
+                Log.Debug(TAG, "RotationSensor");
+                float[] tempValue = new float[3];
+                e.Values.CopyTo(tempValue, 0);
+
+                SensorManager.GetRotationMatrixFromVector(rotMatrix, tempValue);
+                SensorManager.GetOrientation(rotMatrix, orientationValues);
+
+                for (int i = 0; i < 3; ++i)
+                {
+                    orientationValues[i] = (float)(orientationValues[i] * (180.0 / Math.PI));
+                }
+
+                azimuth = orientationValues[0];
+                pitch = orientationValues[1];
+                roll = orientationValues[2];
+
+                if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotOrientation)
+                    ((PlotActivity)this.binder.activity).updateOrientPlot(e.Timestamp / 1e9, azimuth, pitch, roll);
+            }
+        }
+
+        private void updateGyroscope(SensorEvent e)
+        {
+            lock (_syncLock)
+            {
+                Log.Debug(TAG, "GyroscopeSensor");
+                e.Values.CopyTo(rateOfRotation, 0);
+
+                float ax = rateOfRotation[0]; //Pitch
+                float ay = rateOfRotation[1]; //Roll
+                float az = rateOfRotation[2]; //Azimuth
+
+                omegaAmpl = (Math.Sqrt(ax * ax + ay * ay + az * az));
+
+                if (omegaAmpl > omegaTh && this.freeFallDetected && !this.omegaAmplitudeChanged)
+                    this.omegaAmplitudeChanged = true;
+
+                if (this.binder != null && this.binder.activity != null && ((PlotActivity)this.binder.activity).PlotInclination)
+                    ((PlotActivity)this.binder.activity).updateGyroscopePlot(e.Timestamp / 1e9, omegaAmpl);
+
+            }
+        }
+
+
         public void notifyFallDetection()
         {
-
             double maxIncl = inclinationList.Max();
             double minIncl = inclinationList.Min();
 
@@ -314,17 +324,17 @@ namespace FallDetector.Sources
             bool omegaPitchTh = (maxOmegaPitch > omegaTh) || (minOmegaPitch > omegaTh);
             bool omegaRollTh = (maxOmegaRoll > omegaTh) || (minOmegaRoll > omegaTh);
 
-            if ((deltaPitch >= 90) || (deltaRoll >= 90))
+            if ((deltaPitch >= 60) || (deltaRoll >= 60))
                 this.orientationChanged = true;
 
             //Log.Debug(TAG, "omegaRollTh : " + omegaRollTh.ToString());
-            //Log.Debug(TAG, "omegaPitchTh : " + omegaPitchTh.ToString());
+            Log.Debug(TAG, "omegaAmpl : " + omegaAmpl.ToString());
             Log.Debug(TAG, "MaxIncli : " + maxIncl.ToString() + " MinIncli : " + minIncl.ToString());
             Log.Debug(TAG, "maxPitch : " + maxPitch.ToString() + " minPitch : " + minPitch.ToString());
             Log.Debug(TAG, "maxRoll : " + maxRoll.ToString() + " minRoll : " + minRoll.ToString());
 
 
-            if (this.impactDetected && this.freeFallDetected && this.orientationChanged && this.omegaAmplitudeChanged)
+            if (this.impactDetected && this.freeFallDetected /*&& this.orientationChanged*/ && this.omegaAmplitudeChanged)
                 this.triggersFallDetected();
 
             this.reset();
@@ -347,9 +357,7 @@ namespace FallDetector.Sources
 
         public void sendNotification()
         {
-
             Console.WriteLine("sendNotification");
-
             Intent intent = new Intent(this, typeof(MainActivity));
 
             const int pendingIntentId = 0;
@@ -371,11 +379,6 @@ namespace FallDetector.Sources
 
             notificationManager.Notify(notificationId, notification);
         }
-
-
-
     }
-
-
 }
 

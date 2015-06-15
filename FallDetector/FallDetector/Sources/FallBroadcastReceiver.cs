@@ -11,7 +11,6 @@ namespace FallDetector.Sources
     [IntentFilter(new[] { "FallBroadcastReceiver" })]
     public class FallBroadcastReceiver : BroadcastReceiver
     {
-
         private const String TAG = "FallBroadcastReceiver";
 
         public override void OnReceive(Context context, Intent intent)
@@ -29,10 +28,6 @@ namespace FallDetector.Sources
                     Log.Error(TAG, excep.ToString());
                 }
             }
-
-
-
-
         }
     }
 }

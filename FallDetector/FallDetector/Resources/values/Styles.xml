@@ -12,6 +12,28 @@
     <item name="android:padding">10dip</item>
   </style>
 
+  <style name="styleButtonRight">
+    <item name="android:textSize">20sp</item>
+    <item name="android:textStyle">bold</item>
+    <item name="android:gravity">left</item>
+    <item name="android:shadowColor">#000000</item>
+    <item name="android:shadowDx">1</item>
+    <item name="android:shadowDy">1</item>
+    <item name="android:shadowRadius">0.6</item>
+    <item name="android:padding">10dip</item>
+  </style>
+
+  <style name="styleButtonLeft">
+    <item name="android:textSize">20sp</item>
+    <item name="android:textStyle">bold</item>
+    <item name="android:gravity">right</item>
+    <item name="android:shadowColor">#000000</item>
+    <item name="android:shadowDx">1</item>
+    <item name="android:shadowDy">1</item>
+    <item name="android:shadowRadius">0.6</item>
+    <item name="android:padding">10dip</item>
+  </style>
+
   <style name="styleText">
     <item name="android:textSize">40sp</item>
     <item name="android:textStyle">bold</item>
