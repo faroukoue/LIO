@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+  <declare-styleable name="CustomTextView">
+    <attr name="typeface"/>
+  </declare-styleable>
+
+  <attr name="typeface" format="enum">
+    <enum name="DaysLater" value="0"/>
+    <enum name="ColorsOfAutumn" value="1"/>
+    <enum name="RemachineScript" value="2"/>
+  </attr>
+</resources>

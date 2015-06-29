@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:local="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:minWidth="25px"
+    android:minHeight="25px"
+    tools:actionBarNavMode="tabs"
+    android:background="@drawable/Custom_Background">
+    <FallDetector.Sources.Fonts.CustomTextView
+        android:text="Settings"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/Title1"
+        android:layout_alignParentTop="true"
+        style="@style/styleText"
+        android:layout_marginTop="15dp"
+        local:typeface="ColorsOfAutumn" />
+    <CheckBox
+        android:text="Notification"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:id="@+id/notificationCheckBox"
+        android:paddingStart="10dp"
+        android:layout_alignParentLeft="true"
+        android:button="@drawable/Custom_Checkbox_Selector"
+        style="@style/styleCheckBox"
+        android:layout_marginTop="100dp" />
+    <ImageView
+        android:src="@drawable/Check"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:id="@+id/notificationImageView"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="100dp"
+        android:layout_marginRight="30dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY" />
+    <CheckBox
+        android:text="Send Email"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:id="@+id/emailCheckBox"
+        android:paddingStart="10dp"
+        android:layout_alignParentLeft="true"
+        android:button="@drawable/Custom_Checkbox_Selector"
+        style="@style/styleCheckBox"
+        android:layout_marginTop="200dp" />
+    <EditText
+        android:inputType="textEmailAddress"
+        android:text="Email"
+        android:background="@drawable/Custom_EditText"
+        android:layout_width="240.0dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/EmailEditText"
+        style="@style/styleEditText"
+        android:layout_marginTop="240dp" />
+    <ImageView
+        android:src="@drawable/Mail"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:id="@+id/emailImageView"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="200dp"
+        android:layout_marginRight="30dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY" />
+    <CheckBox
+        android:text="Send SMS"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:id="@+id/smsCheckBox"
+        android:paddingStart="10dp"
+        android:layout_alignParentLeft="true"
+        android:button="@drawable/Custom_Checkbox_Selector"
+        style="@style/styleCheckBox"
+        android:layout_marginTop="300dp" />
+    <EditText
+        android:inputType="phone"
+        android:text="Phone Number"
+        android:background="@drawable/Custom_EditText"
+        android:layout_width="230.0dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/PhoneEditText"
+        android:layout_marginTop="340dp"
+        style="@style/styleEditText"
+        android:layout_alignParentTop="true" />
+    <ImageView
+        android:src="@drawable/Contacts"
+        android:background="@null"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:id="@+id/contactsImageView"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="300dp"
+        android:layout_marginRight="30dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY" />
+    <Button
+        android:text="OK"
+        android:background="@drawable/CustomButton"
+        android:textColor="@color/CustomTextButtonColor"
+        android:layout_width="190.0dp"
+        android:layout_height="60.0dp"
+        android:id="@+id/OkButton"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="18dp"
+        style="@style/styleButton" />
+</RelativeLayout>

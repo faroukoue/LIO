@@ -15,10 +15,12 @@ namespace FallDetector.Sources
         private FallBroadcastReceiver receiver;
         private ISharedPreferences prefs;
 
-        private Button accButton;
+        /*private Button accButton;
         private Button orientButton;
         private Button inclinButton;
-        private TextView countTextView;
+        private TextView countTextView;*/
+
+        private ImageButton settingsButton;
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -27,8 +29,18 @@ namespace FallDetector.Sources
             Console.WriteLine("MainActivity OnCreate");
 
             // Set our view from the "main" layout resource
-            SetContentView(Resource.Layout.AlertLayout);
+            SetContentView(Resource.Layout.MainLayout);
             prefs = PreferenceManager.GetDefaultSharedPreferences(this);
+
+            var fallDetectorIntent = new Intent(this, typeof(FallDetectorService));
+            fallDetectorIntent.PutExtra("FallServiceStarted", "FallService");
+            StartService(fallDetectorIntent);
+
+            settingsButton = FindViewById<ImageButton>(Resource.Id.SettingsButton);
+            settingsButton.Click += delegate
+            {
+                this.onClick(settingsButton);
+            };
 
             /*accButton = FindViewById<Button>(Resource.Id.accelerometerButton);
             orientButton = FindViewById<Button>(Resource.Id.orientationButton);
@@ -36,16 +48,6 @@ namespace FallDetector.Sources
             countTextView = FindViewById<TextView>(Resource.Id.fallCountTextView);
 
             this.updateUI();
-
-            var fallDetectorIntent = new Intent(this, typeof(FallDetectorService));
-            fallDetectorIntent.PutExtra("FallServiceStarted", "FallService");
-            StartService(fallDetectorIntent);
-
-            receiver = new FallBroadcastReceiver();
-            var intentFilter = new IntentFilter();
-            intentFilter.AddAction("FallBroadcastReceiver");
-
-            RegisterReceiver(receiver, intentFilter);
 
             accButton.Click += delegate
             {
@@ -63,12 +65,28 @@ namespace FallDetector.Sources
 
         protected override void OnResume()
         {
-            base.OnResume(); // Always call the superclass first.
+            base.OnResume();
+
+            var intentMsg = new Intent();
+            intentMsg.SetAction("FallBroadcastReceiver");
+            intentMsg.PutExtra(TAG.enableFallReportTAG, false);
+            SendBroadcast(intentMsg);
+        }
+
+        protected override void OnPause()
+        {
+            base.OnPause();
+
+            var intentMsg = new Intent();
+            intentMsg.SetAction("FallBroadcastReceiver");
+            intentMsg.PutExtra(TAG.enableFallReportTAG, true);
+            SendBroadcast(intentMsg);
+
         }
 
         private void onClick(View v)
         {
-            if (v == accButton)
+            /*if (v == accButton)
             {
                 Intent plotActivityIntent = new Intent(this, typeof(PlotActivity));
                 plotActivityIntent.PutExtra("PlotAccelerometer", true);
@@ -85,6 +103,12 @@ namespace FallDetector.Sources
                 Intent plotActivityIntent = new Intent(this, typeof(PlotActivity));
                 plotActivityIntent.PutExtra("PlotInclination", true);
                 StartActivity(plotActivityIntent);
+            }*/
+
+            if (v == settingsButton)
+            {
+                Intent settingsActivityIntent = new Intent(this, typeof(SettingsActivity));
+                StartActivity(settingsActivityIntent);
             }
         }
 
@@ -93,7 +117,7 @@ namespace FallDetector.Sources
             RunOnUiThread(() =>
             {
                 int count = prefs.GetInt("FALL_COUNT", 0);
-                countTextView.Text = "Count " + count.ToString();
+                //countTextView.Text = "Count " + count.ToString();
 
             });
         }

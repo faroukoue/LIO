@@ -35,9 +35,30 @@
   </style>
 
   <style name="styleText">
-    <item name="android:textSize">40sp</item>
+    <item name="android:textSize">60sp</item>
     <item name="android:textStyle">bold</item>
     <item name="android:gravity">center</item>
+    <item name="android:textColor">#2B2B2B</item>
+  </style>
+
+  <style name="styleTitle">
+    <item name="android:textSize">60sp</item>
+    <item name="android:textStyle">bold</item>
+    <item name="android:gravity">center</item>
+    <item name="android:textColor">#FFFFFF</item>
+  </style>
+
+  <style name="styleCheckBox">
+    <item name="android:textSize">30sp</item>
+    <item name="android:textStyle">bold</item>
+    <item name="android:gravity">left</item>
+    <item name="android:textColor">#2B2B2B</item>
+  </style>
+  
+  <style name="styleEditText">
+    <item name="android:textSize">20sp</item>
+    <item name="android:textStyle">italic</item>
+    <item name="android:gravity">left</item>
     <item name="android:textColor">#2B2B2B</item>
   </style>
 

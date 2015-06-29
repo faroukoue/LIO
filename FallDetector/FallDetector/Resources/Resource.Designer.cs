@@ -31,6 +31,9 @@ namespace FallDetector
 		public partial class Attribute
 		{
 			
+			// aapt resource value: 0x7f010000
+			public const int typeface = 2130771968;
+			
 			static Attribute()
 			{
 				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
@@ -70,34 +73,91 @@ namespace FallDetector
 			public const int ArrowButtonRight = 2130837505;
 			
 			// aapt resource value: 0x7f020002
-			public const int BlueMinus = 2130837506;
+			public const int blue_checkbox_checked = 2130837506;
 			
 			// aapt resource value: 0x7f020003
-			public const int Button_Selector = 2130837507;
+			public const int blue_checkbox_unchecked = 2130837507;
 			
 			// aapt resource value: 0x7f020004
-			public const int Custom_Background = 2130837508;
+			public const int BlueMinus = 2130837508;
 			
 			// aapt resource value: 0x7f020005
-			public const int CustomButton = 2130837509;
+			public const int Button_Selector = 2130837509;
 			
 			// aapt resource value: 0x7f020006
-			public const int FallingIcon = 2130837510;
+			public const int Caution = 2130837510;
 			
 			// aapt resource value: 0x7f020007
-			public const int Icon = 2130837511;
+			public const int Check = 2130837511;
 			
 			// aapt resource value: 0x7f020008
-			public const int Minus = 2130837512;
+			public const int CheckButton = 2130837512;
 			
 			// aapt resource value: 0x7f020009
-			public const int Plus = 2130837513;
+			public const int Contacts = 2130837513;
 			
 			// aapt resource value: 0x7f02000a
-			public const int Warning = 2130837514;
+			public const int Custom_Background = 2130837514;
 			
 			// aapt resource value: 0x7f02000b
-			public const int Warning_Image_View = 2130837515;
+			public const int Custom_Checkbox_Selector = 2130837515;
+			
+			// aapt resource value: 0x7f02000c
+			public const int Custom_EditText = 2130837516;
+			
+			// aapt resource value: 0x7f02000d
+			public const int CustomAlertBackground = 2130837517;
+			
+			// aapt resource value: 0x7f02000e
+			public const int CustomButton = 2130837518;
+			
+			// aapt resource value: 0x7f02000f
+			public const int CustomMainBackground = 2130837519;
+			
+			// aapt resource value: 0x7f020010
+			public const int FallingIcon = 2130837520;
+			
+			// aapt resource value: 0x7f020011
+			public const int FallingWallpaper = 2130837521;
+			
+			// aapt resource value: 0x7f020012
+			public const int Gear = 2130837522;
+			
+			// aapt resource value: 0x7f020013
+			public const int Icon = 2130837523;
+			
+			// aapt resource value: 0x7f020014
+			public const int Mail = 2130837524;
+			
+			// aapt resource value: 0x7f020015
+			public const int Minus = 2130837525;
+			
+			// aapt resource value: 0x7f020016
+			public const int OffButton = 2130837526;
+			
+			// aapt resource value: 0x7f020017
+			public const int OnButton = 2130837527;
+			
+			// aapt resource value: 0x7f020018
+			public const int Plus = 2130837528;
+			
+			// aapt resource value: 0x7f020019
+			public const int power = 2130837529;
+			
+			// aapt resource value: 0x7f02001a
+			public const int powerOn = 2130837530;
+			
+			// aapt resource value: 0x7f02001b
+			public const int Settings = 2130837531;
+			
+			// aapt resource value: 0x7f02001c
+			public const int Tools = 2130837532;
+			
+			// aapt resource value: 0x7f02001d
+			public const int Warning = 2130837533;
+			
+			// aapt resource value: 0x7f02001e
+			public const int Warning_Image_View = 2130837534;
 			
 			static Drawable()
 			{
@@ -112,41 +172,86 @@ namespace FallDetector
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7f070003
-			public const int CountTextView = 2131165187;
-			
-			// aapt resource value: 0x7f070004
-			public const int OKButton = 2131165188;
-			
-			// aapt resource value: 0x7f070005
-			public const int ReportButton = 2131165189;
-			
-			// aapt resource value: 0x7f070007
-			public const int accelerometerButton = 2131165191;
-			
-			// aapt resource value: 0x7f070008
-			public const int fallCountTextView = 2131165192;
-			
-			// aapt resource value: 0x7f070002
-			public const int fallTextView = 2131165186;
-			
-			// aapt resource value: 0x7f070001
-			public const int imageView1 = 2131165185;
-			
-			// aapt resource value: 0x7f070009
-			public const int inclinationButton = 2131165193;
+			// aapt resource value: 0x7f070000
+			public const int ColorsOfAutumn = 2131165184;
 			
 			// aapt resource value: 0x7f070006
-			public const int orientationButton = 2131165190;
+			public const int CountTextView = 2131165190;
 			
-			// aapt resource value: 0x7f07000b
-			public const int plotmodel = 2131165195;
+			// aapt resource value: 0x7f070001
+			public const int DaysLater = 2131165185;
+			
+			// aapt resource value: 0x7f070015
+			public const int EmailEditText = 2131165205;
+			
+			// aapt resource value: 0x7f070007
+			public const int IMOKButton = 2131165191;
+			
+			// aapt resource value: 0x7f07001a
+			public const int OkButton = 2131165210;
+			
+			// aapt resource value: 0x7f070018
+			public const int PhoneEditText = 2131165208;
+			
+			// aapt resource value: 0x7f070002
+			public const int RemachineScript = 2131165186;
+			
+			// aapt resource value: 0x7f070008
+			public const int ReportButton = 2131165192;
+			
+			// aapt resource value: 0x7f07000d
+			public const int SettingsButton = 2131165197;
+			
+			// aapt resource value: 0x7f070011
+			public const int Title1 = 2131165201;
 			
 			// aapt resource value: 0x7f07000a
-			public const int plotview = 2131165194;
+			public const int accelerometerButton = 2131165194;
 			
-			// aapt resource value: 0x7f070000
-			public const int relativeLayout1 = 2131165184;
+			// aapt resource value: 0x7f070019
+			public const int contactsImageView = 2131165209;
+			
+			// aapt resource value: 0x7f070014
+			public const int emailCheckBox = 2131165204;
+			
+			// aapt resource value: 0x7f070016
+			public const int emailImageView = 2131165206;
+			
+			// aapt resource value: 0x7f07000b
+			public const int fallCountTextView = 2131165195;
+			
+			// aapt resource value: 0x7f070005
+			public const int fallTextView = 2131165189;
+			
+			// aapt resource value: 0x7f070004
+			public const int imageView1 = 2131165188;
+			
+			// aapt resource value: 0x7f07000c
+			public const int inclinationButton = 2131165196;
+			
+			// aapt resource value: 0x7f070012
+			public const int notificationCheckBox = 2131165202;
+			
+			// aapt resource value: 0x7f070013
+			public const int notificationImageView = 2131165203;
+			
+			// aapt resource value: 0x7f070009
+			public const int orientationButton = 2131165193;
+			
+			// aapt resource value: 0x7f070010
+			public const int plotmodel = 2131165200;
+			
+			// aapt resource value: 0x7f07000f
+			public const int plotview = 2131165199;
+			
+			// aapt resource value: 0x7f070003
+			public const int relativeLayout1 = 2131165187;
+			
+			// aapt resource value: 0x7f070017
+			public const int smsCheckBox = 2131165207;
+			
+			// aapt resource value: 0x7f07000e
+			public const int textView1 = 2131165198;
 			
 			static Id()
 			{
@@ -168,7 +273,13 @@ namespace FallDetector
 			public const int Main = 2130903041;
 			
 			// aapt resource value: 0x7f030002
-			public const int plot = 2130903042;
+			public const int MainLayout = 2130903042;
+			
+			// aapt resource value: 0x7f030003
+			public const int plot = 2130903043;
+			
+			// aapt resource value: 0x7f030004
+			public const int SettingsLayout = 2130903044;
 			
 			static Layout()
 			{
@@ -211,8 +322,17 @@ namespace FallDetector
 			// aapt resource value: 0x7f050001
 			public const int styleButtonRight = 2131034113;
 			
+			// aapt resource value: 0x7f050005
+			public const int styleCheckBox = 2131034117;
+			
+			// aapt resource value: 0x7f050006
+			public const int styleEditText = 2131034118;
+			
 			// aapt resource value: 0x7f050003
 			public const int styleText = 2131034115;
+			
+			// aapt resource value: 0x7f050004
+			public const int styleTitle = 2131034116;
 			
 			static Style()
 			{
@@ -220,6 +340,25 @@ namespace FallDetector
 			}
 			
 			private Style()
+			{
+			}
+		}
+		
+		public partial class Styleable
+		{
+			
+			public static int[] CustomTextView = new int[] {
+					2130771968};
+			
+			// aapt resource value: 0
+			public const int CustomTextView_typeface = 0;
+			
+			static Styleable()
+			{
+				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
+			}
+			
+			private Styleable()
 			{
 			}
 		}

@@ -8,6 +8,7 @@ using Android.Content;
 using Android.Hardware;
 using Android.Util;
 using Android.Preferences;
+using Android.Telephony;
 
 
 namespace FallDetector.Sources
@@ -16,17 +17,16 @@ namespace FallDetector.Sources
     [IntentFilter(new String[] { "FallDetectorService" })]
     public class FallDetectorService : Service, ISensorEventListener
     {
-        private const String TAG = "FallDetectorService";
-        private const String PrefTAG = "FALL_COUNT";
-
         private const int notificationId = 0;
-        private const float maxAccTh = 1.7f; //Upper threshold
+        private const float maxAccTh = 2.2f; //Upper threshold
         private const float minAccTh = 0.7f; //Lower threshold
-        private const float omegaTh = 8f; //Omega threshold
+        private const float omegaTh = 10f; //Omega threshold
         private const long timeFallingWindow = 2; //time of the fall (in seconds)
+        private const String fallMessage = "Fall detected! Are you OK?";
 
         private ISharedPreferences prefs;
         private ISharedPreferencesEditor prefsEditor;
+        private FallBroadcastReceiver receiver;
 
         private static readonly object _syncLock = new object();
         private SensorManager sensorManager;
@@ -81,6 +81,16 @@ namespace FallDetector.Sources
         public Boolean isBound = false;
         public FallDetectorServiceBinder binder;
 
+        private AlertReport alert;
+
+        private Boolean enableFallReport = false;
+
+        public Boolean EnableFallReport
+        {
+            get { return enableFallReport; }
+            set { enableFallReport = value; }
+        }
+
 
         public FallDetectorService()
             : base()
@@ -89,7 +99,7 @@ namespace FallDetector.Sources
 
         public override IBinder OnBind(Intent intent)
         {
-            Log.Debug(TAG, "OnBind");
+            Log.Debug(TAG.fallDetectorTAG, "OnBind");
 
             binder = new FallDetectorServiceBinder(this);
             this.isBound = true;
@@ -102,9 +112,9 @@ namespace FallDetector.Sources
             prefs = PreferenceManager.GetDefaultSharedPreferences(this);
             prefsEditor = prefs.Edit();
 
-            fallCount = prefs.GetInt(PrefTAG, 0);
+            fallCount = prefs.GetInt(TAG.fallDetectorTAG, 0);
 
-            prefsEditor.PutInt(PrefTAG, fallCount);
+            prefsEditor.PutInt(TAG.PrefTAG, fallCount);
 
             rotMatrix = new float[16];
             orientationValues = new float[3];
@@ -128,6 +138,13 @@ namespace FallDetector.Sources
             sensorManager.RegisterListener(this, rotationSensor, SensorDelay.Normal);
 
             timer = new CustomCountDownTimer(timeFallingWindow * 1000, 1000, this);
+
+            alert = new AlertReport(this);
+
+            receiver = new FallBroadcastReceiver();
+            var intentFilter = new IntentFilter();
+            intentFilter.AddAction("FallBroadcastReceiver");
+            RegisterReceiver(receiver, intentFilter);
         }
 
         [Obsolete]
@@ -155,7 +172,7 @@ namespace FallDetector.Sources
         {
             base.OnTaskRemoved(rootIntent);
 
-            Log.Debug(TAG, "OnTaskRemoved");
+            Log.Debug(TAG.fallDetectorTAG, "OnTaskRemoved");
             this.StopSelf();
 
         }
@@ -173,7 +190,7 @@ namespace FallDetector.Sources
                 this.updateAccelerometer(e);
 
             }
-            Log.Debug(TAG, e.Sensor.ToString());
+            Log.Debug(TAG.fallDetectorTAG, e.Sensor.ToString());
 
             if (e.Sensor == rotationSensor)
             {
@@ -197,24 +214,20 @@ namespace FallDetector.Sources
 
         public void triggersFallDetected()
         {
-            this.sendNotification();
+            this.startAlertActivity();
+
             this.fallCount++;
 
-            prefsEditor.PutInt(PrefTAG, this.fallCount);
+            prefsEditor.PutInt(TAG.PrefTAG, this.fallCount);
             prefsEditor.Apply();
 
-            var intentMsg = new Intent();
-            intentMsg.SetAction("FallBroadcastReceiver");
-            intentMsg.PutExtra("FallDetected", true);
-            SendBroadcast(intentMsg);
-
-            Log.Debug(TAG, "Fall Detected");
+            Log.Debug(TAG.fallDetectorTAG, "Fall Detected");
 
         }
 
         private void updateAccelerometer(SensorEvent e)
         {
-            Log.Debug(TAG, "accelerometerSensor");
+            Log.Debug(TAG.fallDetectorTAG, "accelerometerSensor");
             lock (_syncLock)
             {
                 float ax = e.Values[0];
@@ -243,7 +256,7 @@ namespace FallDetector.Sources
                     this.FreeFallDetected = true;
                     this.timer.Start();
 
-                    Log.Debug(TAG, "Timer Start");
+                    Log.Debug(TAG.fallDetectorTAG, "Timer Start");
                 }
 
                 if (accT > maxAccTh && !this.ImpactDetected && this.FreeFallDetected)
@@ -258,7 +271,7 @@ namespace FallDetector.Sources
         {
             lock (_syncLock)
             {
-                Log.Debug(TAG, "RotationSensor");
+                Log.Debug(TAG.fallDetectorTAG, "RotationSensor");
                 float[] tempValue = new float[3];
                 e.Values.CopyTo(tempValue, 0);
 
@@ -283,7 +296,7 @@ namespace FallDetector.Sources
         {
             lock (_syncLock)
             {
-                Log.Debug(TAG, "GyroscopeSensor");
+                Log.Debug(TAG.fallDetectorTAG, "GyroscopeSensor");
                 e.Values.CopyTo(rateOfRotation, 0);
 
                 float ax = rateOfRotation[0]; //Pitch
@@ -328,13 +341,13 @@ namespace FallDetector.Sources
                 this.orientationChanged = true;
 
             //Log.Debug(TAG, "omegaRollTh : " + omegaRollTh.ToString());
-            Log.Debug(TAG, "omegaAmpl : " + omegaAmpl.ToString());
-            Log.Debug(TAG, "MaxIncli : " + maxIncl.ToString() + " MinIncli : " + minIncl.ToString());
-            Log.Debug(TAG, "maxPitch : " + maxPitch.ToString() + " minPitch : " + minPitch.ToString());
-            Log.Debug(TAG, "maxRoll : " + maxRoll.ToString() + " minRoll : " + minRoll.ToString());
+            Log.Debug(TAG.fallDetectorTAG, "omegaAmpl : " + omegaAmpl.ToString());
+            Log.Debug(TAG.fallDetectorTAG, "MaxIncli : " + maxIncl.ToString() + " MinIncli : " + minIncl.ToString());
+            Log.Debug(TAG.fallDetectorTAG, "maxPitch : " + maxPitch.ToString() + " minPitch : " + minPitch.ToString());
+            Log.Debug(TAG.fallDetectorTAG, "maxRoll : " + maxRoll.ToString() + " minRoll : " + minRoll.ToString());
 
 
-            if (this.impactDetected && this.freeFallDetected /*&& this.orientationChanged*/ && this.omegaAmplitudeChanged)
+            if (this.impactDetected && this.freeFallDetected && this.orientationChanged && this.omegaAmplitudeChanged)
                 this.triggersFallDetected();
 
             this.reset();
@@ -355,30 +368,15 @@ namespace FallDetector.Sources
             this.omegaAmplitudeChanged = false;
         }
 
-        public void sendNotification()
+        public void startAlertActivity()
         {
-            Console.WriteLine("sendNotification");
-            Intent intent = new Intent(this, typeof(MainActivity));
 
-            const int pendingIntentId = 0;
-            PendingIntent pendingIntent =
-                PendingIntent.GetActivity(this, pendingIntentId, intent, PendingIntentFlags.OneShot);
+            Intent alertActivityIntent = new Intent(this, typeof(AlertActivity));
+            alertActivityIntent.SetFlags(ActivityFlags.NewTask);
 
-            Notification.Builder notificationBuilder = new Notification.Builder(this)
-                .SetContentIntent(pendingIntent)
-                .SetContentTitle("Fall")
-                .SetContentText("Fall Detected! Are you OK ?")
-                .SetDefaults(NotificationDefaults.All)
-                .SetSmallIcon(Resource.Drawable.Warning);
-
-            Notification notification = notificationBuilder.Build();
-            notification.Flags = NotificationFlags.AutoCancel;
-
-            NotificationManager notificationManager =
-                GetSystemService(Context.NotificationService) as NotificationManager;
-
-            notificationManager.Notify(notificationId, notification);
+            StartActivity(alertActivityIntent);
         }
+
     }
 }
 

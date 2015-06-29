@@ -15,19 +15,18 @@ namespace FallDetector.Sources
 
         public override void OnReceive(Context context, Intent intent)
         {
-            Boolean fallDetected = intent.GetBooleanExtra("FallDetected", false);
-            if (fallDetected)
+            Boolean enable = intent.GetBooleanExtra("enableFallReportTAG", false);
+
+            try
             {
-                try
-                {
-                    ((MainActivity)context).updateUI();
-                    Log.Debug(TAG, "FallDetected");
-                }
-                catch (Exception excep)
-                {
-                    Log.Error(TAG, excep.ToString());
-                }
+                ((FallDetectorService)context).EnableFallReport = enable;
+                Log.Debug(TAG, "FallDetected");
             }
+            catch (Exception excep)
+            {
+                Log.Error(TAG, excep.ToString());
+            }
+
         }
     }
 }

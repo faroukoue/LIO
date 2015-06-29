@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:local="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:minWidth="25px"
+    android:minHeight="25px"
+    android:background="@drawable/FallingWallpaper"
+    tools:actionBarNavMode="tabs">
+    <ImageButton
+        android:src="@drawable/Gear"
+        android:background="@null"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:id="@+id/SettingsButton"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="15dp"
+        android:layout_marginBottom="20.2dp" />
+    <FallDetector.Sources.Fonts.CustomTextView
+        android:text="Fall Detector"
+        android:background="@null"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/textView1"
+        android:layout_alignParentTop="true"
+        style="@style/styleTitle"
+        android:layout_marginTop="30dp"
+        local:typeface="ColorsOfAutumn"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+</RelativeLayout>
