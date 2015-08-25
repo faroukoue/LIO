@@ -19,7 +19,6 @@ namespace FallDetector.Sources
 
             try
             {
-                ((FallDetectorService)context).EnableFallReport = enable;
                 Log.Debug(TAG, "FallDetected");
             }
             catch (Exception excep)

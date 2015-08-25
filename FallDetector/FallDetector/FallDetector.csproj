@@ -70,7 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Sources\AlertActivity.cs" />
-    <Compile Include="Sources\AlertReport.cs" />
+    <Compile Include="Sources\AlertService.cs" />
     <Compile Include="Sources\CustomCountDownTimer.cs" />
     <Compile Include="Sources\FallBroadcastReceiver.cs" />
     <Compile Include="Sources\FallDetectorService.cs" />
@@ -88,6 +88,7 @@
     <AndroidAsset Include="Assets\Fonts\DaysLater.ttf" />
     <AndroidAsset Include="Assets\Fonts\ColorsOfAutumn.ttf" />
     <AndroidAsset Include="Assets\Fonts\RemachineScript.ttf" />
+    <None Include="app.config" />
     <None Include="GettingStarted.Xamarin" />
     <None Include="packages.config" />
     <None Include="Resources\AboutResources.txt" />
@@ -153,7 +154,9 @@
     <AndroidResource Include="Resources\drawable\Caution.png" />
     <AndroidResource Include="Resources\values\Attrs.xml" />
     <AndroidResource Include="Resources\drawable\CustomMainBackground.xml" />
-    <AndroidResource Include="Resources\drawable\CustomAlertBackground.xml" />
+    <AndroidResource Include="Resources\drawable\CustomAlertBackground.xml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
     <AndroidResource Include="Resources\drawable\FallingWallpaper.jpg" />
   </ItemGroup>
   <ItemGroup />

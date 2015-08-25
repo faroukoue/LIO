@@ -81,17 +81,6 @@ namespace FallDetector.Sources
         public Boolean isBound = false;
         public FallDetectorServiceBinder binder;
 
-        private AlertReport alert;
-
-        private Boolean enableFallReport = false;
-
-        public Boolean EnableFallReport
-        {
-            get { return enableFallReport; }
-            set { enableFallReport = value; }
-        }
-
-
         public FallDetectorService()
             : base()
         {
@@ -139,8 +128,6 @@ namespace FallDetector.Sources
 
             timer = new CustomCountDownTimer(timeFallingWindow * 1000, 1000, this);
 
-            alert = new AlertReport(this);
-
             receiver = new FallBroadcastReceiver();
             var intentFilter = new IntentFilter();
             intentFilter.AddAction("FallBroadcastReceiver");
@@ -183,7 +170,6 @@ namespace FallDetector.Sources
 
         public void OnSensorChanged(SensorEvent e)
         {
-            //Log.Debug(TAG, e.Sensor.StringType);
 
             if (e.Sensor == accelerometerSensor)
             {
@@ -215,6 +201,7 @@ namespace FallDetector.Sources
         public void triggersFallDetected()
         {
             this.startAlertActivity();
+            this.startAlertService();
 
             this.fallCount++;
 
@@ -338,13 +325,7 @@ namespace FallDetector.Sources
             bool omegaRollTh = (maxOmegaRoll > omegaTh) || (minOmegaRoll > omegaTh);
 
             if ((deltaPitch >= 60) || (deltaRoll >= 60))
-                this.orientationChanged = true;
-
-            //Log.Debug(TAG, "omegaRollTh : " + omegaRollTh.ToString());
-            Log.Debug(TAG.fallDetectorTAG, "omegaAmpl : " + omegaAmpl.ToString());
-            Log.Debug(TAG.fallDetectorTAG, "MaxIncli : " + maxIncl.ToString() + " MinIncli : " + minIncl.ToString());
-            Log.Debug(TAG.fallDetectorTAG, "maxPitch : " + maxPitch.ToString() + " minPitch : " + minPitch.ToString());
-            Log.Debug(TAG.fallDetectorTAG, "maxRoll : " + maxRoll.ToString() + " minRoll : " + minRoll.ToString());
+                this.orientationChanged = true; 
 
 
             if (this.impactDetected && this.freeFallDetected && this.orientationChanged && this.omegaAmplitudeChanged)
@@ -375,6 +356,13 @@ namespace FallDetector.Sources
             alertActivityIntent.SetFlags(ActivityFlags.NewTask);
 
             StartActivity(alertActivityIntent);
+        }
+
+        public void startAlertService()
+        {
+            var alertServiceIntent = new Intent(this, typeof(AlertService));
+            
+            StartService(alertServiceIntent);
         }
 
     }
